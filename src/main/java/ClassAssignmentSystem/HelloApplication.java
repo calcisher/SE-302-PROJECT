@@ -1,4 +1,4 @@
-package com.example.se302project;
+package ClassAssignmentSystem;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

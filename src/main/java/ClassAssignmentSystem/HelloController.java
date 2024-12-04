@@ -1,4 +1,4 @@
-package com.example.se302project;
+package ClassAssignmentSystem;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
