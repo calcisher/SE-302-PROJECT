@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="542.0" prefWidth="630.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.MainViewController">
+    <left>
+        <VBox prefHeight="521.0" prefWidth="102.0" spacing="10" style="-fx-padding: 10;">
+            <Button onAction="#onManageCourse" text="Manage Course" />
+            <Button onAction="#onCreateMeeting" text="Create Meeting" />
+        </VBox>
+    </left>
+    <center>
+        <StackPane prefHeight="556.0" prefWidth="543.0">
+            <Label style="-fx-font-size: 16;" text="Main Interface" />
+        </StackPane>
+    </center>
+</BorderPane>
