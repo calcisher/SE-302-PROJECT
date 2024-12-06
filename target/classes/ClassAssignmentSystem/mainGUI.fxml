@@ -1,21 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.Scene?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/17.0" fx:controller="ClassAssignmentSystem.MainViewController">
+    <!-- Menü Çubuğu (Menu Bar) -->
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="File">
+                    <items>
+                        <MenuItem text="Upload CSV" />
+                        <MenuItem text="Export CSV" />
+                        <SeparatorMenuItem />
+                        <MenuItem text="Exit" />
+                    </items>
+                </Menu>
+                <Menu text="Edit">
+                    <items>
+                        <MenuItem text="Modify Course Assignment" />
+                        <MenuItem text="Modify Course Enrollment" />
+                    </items>
+                </Menu>
+                <Menu text="View">
+                    <items>
+                        <MenuItem text="Weekly Schedules" />
+                        <MenuItem text="Course Attendance" />
+                    </items>
+                </Menu>
+                <Menu text="Help">
+                    <items>
+                        <MenuItem text="User Manual" />
+                        <MenuItem text="About" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
 
-<BorderPane prefHeight="542.0" prefWidth="630.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.MainViewController">
-    <left>
-        <VBox prefHeight="521.0" prefWidth="102.0" spacing="10" style="-fx-padding: 10;">
-            <Button onAction="#onManageCourse" text="Manage Course" />
-            <Button onAction="#onCreateMeeting" text="Create Meeting" />
+    <!-- Araç Çubuğu (Tool Bar) -->
+    <top>
+        <VBox>
+            <MenuBar />
+            <ToolBar>
+                <Button text="Ders Ekle" />
+                <Button text="Toplantı Oluştur" />
+                <Button text="Ders Listesi" fx:id="showCourseListButton" />
+                <Button text="Sınıf Listesi" fx:id="showClassListButton" />
+            </ToolBar>
         </VBox>
-    </left>
+    </top>
+
+    <!-- Sağ Kenar Paneli -->
+    <right>
+        <VBox spacing="10" alignment="CENTER">
+            <Button text="Manage Course" />
+            <Button text="Create Meeting" />
+        </VBox>
+    </right>
+
+    <!-- Merkez İçeriği (Varsayılan) -->
     <center>
-        <StackPane prefHeight="556.0" prefWidth="543.0">
-            <Label style="-fx-font-size: 16;" text="Main Interface" />
-        </StackPane>
+        <Label text="Welcome to Main Interface" />
     </center>
 </BorderPane>
