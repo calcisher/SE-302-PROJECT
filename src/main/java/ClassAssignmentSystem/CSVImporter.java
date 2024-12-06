@@ -8,9 +8,11 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.io.*;
 import java.util.*;
@@ -27,6 +29,7 @@ public class CSVImporter extends Application {
     private Button btnImport;
     private Button btnListCourses;
     private Button btnListClassrooms;
+    private Button btnAssignCourses;
     private ListView<String> coursesListView;
     private ListView<String> classroomsListView;
     private ListView<String> studentsListView;
@@ -39,6 +42,7 @@ public class CSVImporter extends Application {
     private Label lblTimeToStart;
     private Label lblDuration;
     private Label lblLecturer;
+    private Label lblAssignedClassroom;
 
     // Label for Classroom Details
     private Label lblClassroomCapacity;
@@ -55,6 +59,8 @@ public class CSVImporter extends Application {
         btnImport.setDisable(true); // Disabled until both files are selected
         btnListCourses = new Button("List Courses");
         btnListClassrooms = new Button("List Classrooms");
+        btnAssignCourses = new Button("Assign Courses");
+        btnAssignCourses.setDisable(true); // Disabled until assignments can be made
 
         coursesListView = new ListView<>();
         classroomsListView = new ListView<>();
@@ -68,6 +74,7 @@ public class CSVImporter extends Application {
         lblTimeToStart = new Label("Time to Start: ");
         lblDuration = new Label("Duration (Hours): ");
         lblLecturer = new Label("Lecturer: ");
+        lblAssignedClassroom = new Label("Assigned Classroom: ");
 
         // Initialize Classroom Details Label
         lblClassroomCapacity = new Label("Capacity: ");
@@ -78,6 +85,7 @@ public class CSVImporter extends Application {
         btnImport.setOnAction(e -> importData());
         btnListCourses.setOnAction(e -> listCourses());
         btnListClassrooms.setOnAction(e -> listClassrooms());
+        btnAssignCourses.setOnAction(e -> assignCourses());
 
         // Layout Setup
 
@@ -94,7 +102,7 @@ public class CSVImporter extends Application {
         coursesSection.setPrefWidth(300);
 
         // Course Details Section
-        VBox courseDetailsSection = new VBox(5, lblCourseID, lblTimeToStart, lblDuration, lblLecturer);
+        VBox courseDetailsSection = new VBox(5, lblCourseID, lblTimeToStart, lblDuration, lblLecturer, lblAssignedClassroom);
         courseDetailsSection.setPadding(new Insets(10));
         courseDetailsSection.setStyle("-fx-border-color: black; -fx-border-width: 1;");
         courseDetailsSection.setPrefWidth(300);
@@ -135,8 +143,8 @@ public class CSVImporter extends Application {
         HBox mainDisplay = new HBox(20, coursesDisplay, classroomsDisplay);
         mainDisplay.setPadding(new Insets(10));
 
-        // Buttons for Listing
-        HBox listingButtons = new HBox(20, btnListCourses, btnListClassrooms);
+        // Buttons for Listing and Assigning
+        HBox listingButtons = new HBox(20, btnListCourses, btnListClassrooms, btnAssignCourses);
         listingButtons.setPadding(new Insets(10));
 
         // Combine All Sections
@@ -157,7 +165,10 @@ public class CSVImporter extends Application {
             }
         });
 
-        Scene scene = new Scene(root, 1200, 700);
+        // Enable "Assign Courses" button if there are unassigned courses and available classrooms
+        updateAssignButtonState();
+
+        Scene scene = new Scene(root, 1300, 800);
 
         primaryStage.setTitle("CSV Importer and Data Viewer");
         primaryStage.setScene(scene);
@@ -332,6 +343,9 @@ public class CSVImporter extends Application {
             coursesCsvFile = null;
             classroomsCsvFile = null;
             btnImport.setDisable(true);
+
+            // Enable Assign Courses button if possible
+            updateAssignButtonState();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Import Error", "An error occurred during import: " + e.getMessage());
@@ -370,6 +384,147 @@ public class CSVImporter extends Application {
     }
 
     /**
+     * Assigns courses to classrooms either automatically or manually based on user choice.
+     */
+    private void assignCourses() {
+        // Prompt user to choose between automatic and manual assignment
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Assign Courses");
+        alert.setHeaderText("Choose Assignment Method");
+        alert.setContentText("Do you want to assign courses automatically or manually?");
+
+        ButtonType buttonTypeAuto = new ButtonType("Automatic");
+        ButtonType buttonTypeManual = new ButtonType("Manual");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(buttonTypeAuto, buttonTypeManual, buttonTypeCancel);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent()) {
+            if (result.get() == buttonTypeAuto) {
+                performAutomaticAssignment();
+            } else if (result.get() == buttonTypeManual) {
+                performManualAssignment();
+            }
+        }
+    }
+
+    /**
+     * Performs automatic assignment of courses to classrooms.
+     */
+    private void performAutomaticAssignment() {
+        List<String> unassignedCourses = dbManager.getUnassignedCourses();
+        List<String> availableClassrooms = dbManager.getAvailableClassrooms();
+
+        if (unassignedCourses.isEmpty()) {
+            showAlert(AlertType.INFORMATION, "No Unassigned Courses", "All courses have already been assigned to classrooms.");
+            return;
+        }
+
+        if (availableClassrooms.isEmpty()) {
+            showAlert(AlertType.INFORMATION, "No Available Classrooms", "There are no available classrooms to assign.");
+            return;
+        }
+
+        // Sort courses by number of students descending
+        unassignedCourses.sort((c1, c2) -> {
+            int size1 = dbManager.getStudentsByCourse(c1).size();
+            int size2 = dbManager.getStudentsByCourse(c2).size();
+            return Integer.compare(size2, size1);
+        });
+
+        // Sort classrooms by capacity descending
+        availableClassrooms.sort((cl1, cl2) -> {
+            int cap1 = dbManager.getClassroomCapacity(cl1);
+            int cap2 = dbManager.getClassroomCapacity(cl2);
+            return Integer.compare(cap2, cap1);
+        });
+
+        int assignmentsMade = 0;
+        List<String> classroomsToRemove = new ArrayList<>();
+
+        for (String courseID : unassignedCourses) {
+            int courseSize = dbManager.getStudentsByCourse(courseID).size();
+
+            for (String classroomID : availableClassrooms) {
+                int classroomCapacity = dbManager.getClassroomCapacity(classroomID);
+                if (classroomCapacity >= courseSize) {
+                    dbManager.assignClassroomToCourse(courseID, classroomID);
+                    assignmentsMade++;
+                    classroomsToRemove.add(classroomID);
+                    break; // Move to the next course
+                }
+            }
+        }
+
+        // Remove assigned classrooms from available list
+        availableClassrooms.removeAll(classroomsToRemove);
+
+        String message = String.format("Automatic Assignment Completed!\n\nTotal Assignments Made: %d", assignmentsMade);
+        showAlert(AlertType.INFORMATION, "Assignment Completed", message);
+
+        // Refresh the Assign Courses button state
+        updateAssignButtonState();
+    }
+
+    /**
+     * Performs manual assignment of courses to classrooms.
+     */
+    private void performManualAssignment() {
+        List<String> unassignedCourses = dbManager.getUnassignedCourses();
+        List<String> availableClassrooms = dbManager.getAvailableClassrooms();
+
+        if (unassignedCourses.isEmpty()) {
+            showAlert(AlertType.INFORMATION, "No Unassigned Courses", "All courses have already been assigned to classrooms.");
+            return;
+        }
+
+        if (availableClassrooms.isEmpty()) {
+            showAlert(AlertType.INFORMATION, "No Available Classrooms", "There are no available classrooms to assign.");
+            return;
+        }
+
+        // Create a dialog for each unassigned course
+        for (String courseID : unassignedCourses) {
+            int courseSize = dbManager.getStudentsByCourse(courseID).size();
+
+            // Get list of suitable classrooms
+            List<String> suitableClassrooms = new ArrayList<>();
+            for (String classroomID : availableClassrooms) {
+                int capacity = dbManager.getClassroomCapacity(classroomID);
+                if (capacity >= courseSize) {
+                    suitableClassrooms.add(classroomID);
+                }
+            }
+
+            if (suitableClassrooms.isEmpty()) {
+                showAlert(AlertType.INFORMATION, "No Suitable Classroom", "No available classrooms can accommodate course " + courseID + " with " + courseSize + " students.");
+                continue;
+            }
+
+            // Create ChoiceDialog for classroom selection
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(suitableClassrooms.get(0), suitableClassrooms);
+            dialog.setTitle("Assign Classroom");
+            dialog.setHeaderText("Assign Classroom to Course");
+            dialog.setContentText("Select a classroom for course " + courseID + " (" + courseSize + " students):");
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()) {
+                String selectedClassroom = result.get();
+                dbManager.assignClassroomToCourse(courseID, selectedClassroom);
+                availableClassrooms.remove(selectedClassroom); // Remove assigned classroom from available list
+                showAlert(AlertType.INFORMATION, "Assignment Successful", "Assigned Classroom " + selectedClassroom + " to Course " + courseID + ".");
+            } else {
+                // User canceled assignment for this course
+                showAlert(AlertType.WARNING, "Assignment Canceled", "No classroom was assigned to Course " + courseID + ".");
+            }
+        }
+
+        // Refresh the Assign Courses button state
+        updateAssignButtonState();
+    }
+
+    /**
      * Displays the details of the selected course and its students.
      *
      * @param courseID The ID of the selected course.
@@ -382,11 +537,20 @@ public class CSVImporter extends Application {
             lblTimeToStart.setText("Time to Start: " + course.getTimeToStart());
             lblDuration.setText("Duration (Hours): " + course.getDurationInLectureHours());
             lblLecturer.setText("Lecturer: " + course.getLecturer());
+
+            // Fetch assigned classroom
+            String assignedClassroom = dbManager.getAssignedClassroom(courseID);
+            if (assignedClassroom != null) {
+                lblAssignedClassroom.setText("Assigned Classroom: " + assignedClassroom);
+            } else {
+                lblAssignedClassroom.setText("Assigned Classroom: Not Assigned");
+            }
         } else {
             lblCourseID.setText("Course ID: ");
             lblTimeToStart.setText("Time to Start: ");
             lblDuration.setText("Duration (Hours): ");
             lblLecturer.setText("Lecturer: ");
+            lblAssignedClassroom.setText("Assigned Classroom: ");
             showAlert(AlertType.ERROR, "Course Not Found", "Details for course " + courseID + " were not found.");
         }
 
@@ -424,6 +588,7 @@ public class CSVImporter extends Application {
         lblTimeToStart.setText("Time to Start: ");
         lblDuration.setText("Duration (Hours): ");
         lblLecturer.setText("Lecturer: ");
+        lblAssignedClassroom.setText("Assigned Classroom: ");
     }
 
     /**
@@ -493,6 +658,20 @@ public class CSVImporter extends Application {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Updates the state of the "Assign Courses" button based on available assignments.
+     */
+    private void updateAssignButtonState() {
+        List<String> unassignedCourses = dbManager.getUnassignedCourses();
+        List<String> availableClassrooms = dbManager.getAvailableClassrooms();
+
+        if (!unassignedCourses.isEmpty() && !availableClassrooms.isEmpty()) {
+            btnAssignCourses.setDisable(false);
+        } else {
+            btnAssignCourses.setDisable(true);
+        }
     }
 
     public static void main(String[] args) {

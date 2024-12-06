@@ -18,6 +18,9 @@ public class DatabaseManager {
     /**
      * Creates the normalized tables: Courses, Students, Course_Students, and Classrooms.
      */
+    /**
+     * Creates the normalized tables: Courses, Students, Course_Students, Classrooms, and Course_Classroom.
+     */
     public void createNormalizedTables() {
         String createCoursesTable = "CREATE TABLE IF NOT EXISTS Courses ("
                 + "CourseID TEXT PRIMARY KEY,"
@@ -44,18 +47,28 @@ public class DatabaseManager {
                 + "Capacity INTEGER"
                 + ");";
 
+        String createCourseClassroomTable = "CREATE TABLE IF NOT EXISTS Course_Classroom ("
+                + "CourseID TEXT,"
+                + "ClassroomID TEXT,"
+                + "FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),"
+                + "FOREIGN KEY (ClassroomID) REFERENCES Classrooms(ClassroomID),"
+                + "PRIMARY KEY (CourseID, ClassroomID)"
+                + ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
             stmt.execute(createCoursesTable);
             stmt.execute(createStudentsTable);
             stmt.execute(createCourseStudentsTable);
             stmt.execute(createClassroomsTable);
+            stmt.execute(createCourseClassroomTable);
             System.out.println("Normalized tables created or already exist.");
         } catch (SQLException e) {
             System.err.println("Error creating normalized tables.");
             e.printStackTrace();
         }
     }
+
 
     /**
      * Inserts a course into the Courses table.
@@ -316,4 +329,134 @@ public class DatabaseManager {
     private String sanitizeName(String name) {
         return name.trim().replaceAll("[^a-zA-Z0-9_]", "_");
     }
+
+    /**
+     * Assigns a classroom to a course.
+     *
+     * @param courseID    The CourseID.
+     * @param classroomID The ClassroomID.
+     * @return True if assignment is successful, false otherwise.
+     */
+    public boolean assignClassroomToCourse(String courseID, String classroomID) {
+        String sql = "INSERT OR IGNORE INTO Course_Classroom (CourseID, ClassroomID) VALUES (?, ?);";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, courseID);
+            pstmt.setString(2, classroomID);
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("Assigned Classroom: " + classroomID + " to Course: " + courseID);
+                return true;
+            } else {
+                System.out.println("Assignment already exists for Classroom: " + classroomID + " and Course: " + courseID);
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error assigning Classroom: " + classroomID + " to Course: " + courseID);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Retrieves the assigned classroom for a specific course.
+     *
+     * @param courseID The CourseID.
+     * @return The ClassroomID if assigned, null otherwise.
+     */
+    public String getAssignedClassroom(String courseID) {
+        String sql = "SELECT ClassroomID FROM Course_Classroom WHERE CourseID = ?;";
+        String classroomID = null;
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, courseID);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                classroomID = rs.getString("ClassroomID");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving assigned classroom for Course: " + courseID);
+            e.printStackTrace();
+        }
+
+        return classroomID;
+    }
+
+    /**
+     * Retrieves all assignments of courses to classrooms.
+     *
+     * @return A list of String arrays where each array contains CourseID and ClassroomID.
+     */
+    public List<String[]> getAllAssignments() {
+        List<String[]> assignments = new ArrayList<>();
+        String sql = "SELECT CourseID, ClassroomID FROM Course_Classroom ORDER BY CourseID;";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                assignments.add(new String[]{rs.getString("CourseID"), rs.getString("ClassroomID")});
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving assignments.");
+            e.printStackTrace();
+        }
+
+        return assignments;
+    }
+
+    /**
+     * Retrieves all classrooms that have not been assigned yet.
+     *
+     * @return A list of available ClassroomIDs.
+     */
+    public List<String> getAvailableClassrooms() {
+        List<String> availableClassrooms = new ArrayList<>();
+        String sql = "SELECT ClassroomID FROM Classrooms WHERE ClassroomID NOT IN (SELECT ClassroomID FROM Course_Classroom) ORDER BY Capacity DESC;";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                availableClassrooms.add(rs.getString("ClassroomID"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving available classrooms.");
+            e.printStackTrace();
+        }
+
+        return availableClassrooms;
+    }
+
+    /**
+     * Retrieves all courses that have not been assigned a classroom yet.
+     *
+     * @return A list of unassigned CourseIDs.
+     */
+    public List<String> getUnassignedCourses() {
+        List<String> unassignedCourses = new ArrayList<>();
+        String sql = "SELECT CourseID FROM Courses WHERE CourseID NOT IN (SELECT CourseID FROM Course_Classroom) ORDER BY CourseID;";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                unassignedCourses.add(rs.getString("CourseID"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving unassigned courses.");
+            e.printStackTrace();
+        }
+
+        return unassignedCourses;
+    }
+
+
+
 }
