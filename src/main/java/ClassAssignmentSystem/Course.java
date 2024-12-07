@@ -1,5 +1,6 @@
 package ClassAssignmentSystem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Course {
@@ -9,7 +10,7 @@ public class Course {
     private final String lecturer;
     private List<Student> enrolledStudents;
     private Classroom assignedClassroom;
-
+    private int studentCount; // New field to store the number of enrolled students
 
     public Course(String courseID, String timeToStart, int durationInLectureHours, String lecturer, Classroom assignedClassroom) {
         this.code = courseID;
@@ -17,6 +18,18 @@ public class Course {
         this.durationInLectureHours = durationInLectureHours;
         this.lecturer = lecturer;
         this.assignedClassroom = assignedClassroom;
+        this.enrolledStudents = new ArrayList<>();
+        this.studentCount = 0; // Initialize to zero
+    }
+
+    // Existing getters...
+
+    public int getStudentCount() {
+        return studentCount;
+    }
+
+    public void setStudentCount(int count) {
+        this.studentCount = count;
     }
 
     // Getters

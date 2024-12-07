@@ -20,6 +20,9 @@ public class MainViewController {
     private Button btnSelectCoursesCSV;
 
     @FXML
+    private Button btnAssignCourses;
+
+    @FXML
     private Button btnSelectClassroomsCSV;
 
     @FXML
@@ -34,8 +37,6 @@ public class MainViewController {
     @FXML
     private Button btnListClassrooms;
 
-    @FXML
-    private Button btnAssignCourses;
 
     // UI Components - ListViews
     @FXML
@@ -78,7 +79,13 @@ public class MainViewController {
         classroomsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> displayClassroomDetails(newValue));
 
         // Initially disable "Assign Courses" button
-        btnAssignCourses.setDisable(true);
+        btnAssignCourses.setDisable(true); // Initially disable
+
+        // Enable enhanced assignment after import
+        btnImport.setOnAction(event -> {
+            handleImport();
+            btnAssignCourses.setDisable(false);
+        });
     }
 
     // Handler for selecting Courses CSV file
@@ -94,6 +101,42 @@ public class MainViewController {
             btnSelectCoursesCSV.setText("Courses CSV: " + selectedFile.getName());
         }
         updateImportButtonState();
+    }
+
+    @FXML
+    private void handleAssignCourses() {
+        try {
+            boolean success = dbManager.assignCoursesToClassrooms();
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Assignment Successful", "All courses have been assigned to classrooms successfully.");
+                handleListCourses(); // Refresh the courses list to show assigned classrooms
+            } else {
+                showAlert(Alert.AlertType.WARNING, "Partial Assignment", "Some courses could not be assigned to any classroom due to capacity or time conflicts.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred during assignment.");
+        }
+    }
+
+
+
+
+    // Handler for Assign Courses button
+    @FXML
+    private void handleAssignCoursesEnhanced() {
+        try {
+            boolean success = dbManager.assignCoursesToClassrooms();
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Assignment Successful", "Courses have been assigned to classrooms.");
+                handleListCourses(); // Refresh the courses list to show assigned classrooms
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Assignment Failed", "There was an error assigning courses to classrooms.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred during assignment.");
+        }
     }
 
     // Handler for selecting Classrooms CSV file
@@ -175,22 +218,7 @@ public class MainViewController {
         }
     }
 
-    // Handler for Assign Courses button
-    @FXML
-    private void handleAssignCourses() {
-        try {
-            boolean success = dbManager.assignCoursesToClassrooms();
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Assignment Successful", "Courses have been assigned to classrooms.");
-                handleListCourses(); // Refresh the courses list to show assigned classrooms
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Assignment Failed", "There was an error assigning courses to classrooms.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred during assignment.");
-        }
-    }
+
 
     // Display course details and associated students
     private void displayCourseDetails(String courseName) {
