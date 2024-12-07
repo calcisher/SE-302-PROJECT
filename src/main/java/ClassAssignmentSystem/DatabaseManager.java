@@ -157,9 +157,8 @@ public class DatabaseManager {
              ResultSet resultSet = selectQueryStmt.executeQuery()) {
 
             if (resultSet.next()) {
-                // Veritabanından çekilen veriyi obje değişkenine atama
-                Object result = resultSet.getObject(1); // İlk sütun (yani 'attribute')'u alıyoruz.
-                return result; // Objeyi döndürüyoruz.
+                Object result = resultSet.getObject(1);
+                return result;
             }
 
         } catch (SQLException e) {
@@ -167,7 +166,7 @@ public class DatabaseManager {
             System.out.println("Illegal argument.");
         }
 
-        return null; // Eğer veri bulunmazsa null döndür
+        return null;
     }
 
 }
