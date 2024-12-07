@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.2-ea" fx:controller="ClassAssignmentSystem.ScheduleController">
+    <children>
+        <GridPane fx:id="gridPane" alignment="CENTER" hgap="20.0" prefHeight="216.0" prefWidth="808.0" vgap="40.0">
+            <!-- Headers row (Optional) -->
+            <Label style="-fx-font-weight: bold;" text="Time" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <Label style="-fx-font-weight: bold;" text="Monday" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label style="-fx-font-weight: bold;" text="Tuesday" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+            <Label style="-fx-font-weight: bold;" text="Wednesday" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+            <Label style="-fx-font-weight: bold;" text="Thursday" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+            <Label style="-fx-font-weight: bold;" text="Friday" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+
+            <!-- Time slots (Optional example) -->
+            <Label text="8:00 - 9:00" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label text="9:00 - 10:00" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+            <Label text="10:00 - 11:00" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+            <Label text="11:00 - 12:00" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+            <Label text="12:00 - 13:00" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+            <Label text="13:00 - 14:00" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+            <Label text="14:00 - 15:00" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+            <Label text="15:00 - 16:00" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+            <Label text="16:00 - 17:00" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
+            <!-- Repeat for all time slots -->
+        </GridPane>
+    </children>
+</AnchorPane>
