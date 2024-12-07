@@ -34,6 +34,15 @@ public class DatabaseManager {
         }
     }
 
+    public void deleteTable(String tableName) throws SQLException {
+        String sql = "DROP TABLE IF EXISTS \"" + tableName + "\"";
+        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
+
+    public void deleteDatabase() {}
+
     //For adding Course CSV data to Courses Table.
     public void insertCourseData(String coursesTableName, String[] columnNames, List<String[]> data) throws SQLException {
         if (data.isEmpty()) return;

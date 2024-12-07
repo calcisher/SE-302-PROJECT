@@ -26,6 +26,9 @@ public class MainViewController {
     private Button btnImport;
 
     @FXML
+    private Button btnDelete;
+
+    @FXML
     private Button btnListCourses;
 
     @FXML
@@ -121,12 +124,30 @@ public class MainViewController {
                 CSVImporter.importCourseData(coursesCsvFile,dbManager);
 
                 showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
-                btnAssignCourses.setDisable(false); // Enable Assign Courses button after import
+                btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
+                btnDelete.setDisable(false); //Enable delete data button after import
+
             } catch (Exception e) {
                 e.printStackTrace();
                 showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
             }
     }
+
+    // Handler for Delete button
+    @FXML
+    private void handleDelete() {
+        try {
+            dbManager.deleteDatabase();
+
+            showAlert(Alert.AlertType.INFORMATION, "Delete Successful", "Database Deleted successfully.");
+            btnDelete.setDisable(true);// disable delete data button after delete.
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Delete Failed", "There was an error Deleting the data.");
+        }
+    }
+
+
 
     // Handler for List Courses button
     @FXML
