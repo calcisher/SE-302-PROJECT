@@ -1,13 +1,17 @@
 package ClassAssignmentSystem;
 
+import java.util.List;
+
 public class Student {
-    private String studentName;
+
+    private final String name;
+    private List<Course> enrolledCourses;
 
     public Student(String studentName) {
-        this.studentName = studentName;
+        this.name = studentName;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getName() {
+        return name;
     }
 }

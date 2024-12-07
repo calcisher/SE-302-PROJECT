@@ -1,17 +1,18 @@
 package ClassAssignmentSystem;
 
 public class Classroom {
-    private String classroomID;
-    private int capacity;
+    private final String name;
+    private final int capacity;
+    private boolean[] availability; //for time intervals
 
-    public Classroom(String classroomID, int capacity) {
-        this.classroomID = classroomID;
+    public Classroom(String name, int capacity) {
+        this.name = name;
         this.capacity = capacity;
     }
 
     // Getters
-    public String getClassroomID() {
-        return classroomID;
+    public String getName() {
+        return name;
     }
 
     public int getCapacity() {

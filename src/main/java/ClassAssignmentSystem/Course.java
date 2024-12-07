@@ -1,21 +1,25 @@
 package ClassAssignmentSystem;
 
+import java.util.List;
+
 public class Course {
-    private String courseID;
-    private String timeToStart;
-    private int durationInLectureHours;
-    private String lecturer;
+    private final String code;
+    private final String timeToStart;
+    private final int durationInLectureHours;
+    private final String lecturer;
+    private List<Student> enrolledStudents;
+
 
     public Course(String courseID, String timeToStart, int durationInLectureHours, String lecturer) {
-        this.courseID = courseID;
+        this.code = courseID;
         this.timeToStart = timeToStart;
         this.durationInLectureHours = durationInLectureHours;
         this.lecturer = lecturer;
     }
 
     // Getters
-    public String getCourseID() {
-        return courseID;
+    public String getCode() {
+        return code;
     }
 
     public String getTimeToStart() {
