@@ -52,7 +52,6 @@ public class StudentScheduleController {
         scheduleTable.setItems(scheduleData);
     }
 
-
     public static class ScheduleEntry {
         private String time;
         private String monday;

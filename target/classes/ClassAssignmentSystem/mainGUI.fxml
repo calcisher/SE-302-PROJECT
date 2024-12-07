@@ -43,10 +43,10 @@
         <VBox>
             <MenuBar />
             <ToolBar>
-                <Button text="Ders Ekle" />
-                <Button text="Toplantı Oluştur" />
-                <Button text="Ders Listesi" fx:id="showCourseListButton" />
-                <Button text="Sınıf Listesi" fx:id="showClassListButton" />
+                <Button text="Add Course" />
+                <Button text="Create Meeting" />
+                <Button text="Course List" fx:id="showCourseListButton" />
+                <Button text="Class List" fx:id="showClassListButton" />
             </ToolBar>
         </VBox>
     </top>
@@ -61,6 +61,6 @@
 
     <!-- Merkez İçeriği (Varsayılan) -->
     <center>
-        <Label text="Welcome to Main Interface" />
+        <Label/>
     </center>
 </BorderPane>
