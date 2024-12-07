@@ -13,7 +13,7 @@ public class ScheduleController {
 
 private final String[][] scheduleData = {
     {"SE115-C201", "", "MATH240-C301", "", "FENG101-M206"},
-    {"", "SE302-C202", "", "CE215\nM101", ""},
+    {"", "SE302-C202", "", "CE215-M101", ""},
     { "", "PHYS100-ML103", "", "CHEM100-ML104", "SE307-C203", ""},
     {"CE221-M102", "MATH153-ML105", "", "", "SE350-C204"},
     { "", "", "", "", ""},
