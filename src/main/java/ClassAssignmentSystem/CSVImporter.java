@@ -111,7 +111,7 @@ public class CSVImporter extends Application {
 
     }
 
-    private List<String[]> readCSV(File file) throws Exception {
+    public static List<String[]> readCSV(File file) throws Exception {
         List<String[]> data = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;

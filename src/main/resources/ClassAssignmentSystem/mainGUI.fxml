@@ -1,66 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.Scene?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/17.0" fx:controller="ClassAssignmentSystem.MainViewController">
-    <!-- Menü Çubuğu (Menu Bar) -->
-    <top>
-        <MenuBar>
-            <menus>
-                <Menu text="File">
-                    <items>
-                        <MenuItem text="Upload CSV" />
-                        <MenuItem text="Export CSV" />
-                        <SeparatorMenuItem />
-                        <MenuItem text="Exit" />
-                    </items>
-                </Menu>
-                <Menu text="Edit">
-                    <items>
-                        <MenuItem text="Modify Course Assignment" />
-                        <MenuItem text="Modify Course Enrollment" />
-                    </items>
-                </Menu>
-                <Menu text="View">
-                    <items>
-                        <MenuItem text="Weekly Schedules" />
-                        <MenuItem text="Course Attendance" />
-                    </items>
-                </Menu>
-                <Menu text="Help">
-                    <items>
-                        <MenuItem text="User Manual" />
-                        <MenuItem text="About" />
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
-    </top>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-    <!-- Araç Çubuğu (Tool Bar) -->
-    <top>
-        <VBox>
-            <MenuBar />
-            <ToolBar>
-                <Button text="Ders Ekle" />
-                <Button text="Toplantı Oluştur" />
-                <Button text="Ders Listesi" fx:id="showCourseListButton" />
-                <Button text="Sınıf Listesi" fx:id="showClassListButton" />
-            </ToolBar>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ClassAssignmentSystem.MainViewController"
+      spacing="20">
+
+    <!-- Root Padding -->
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Selection Section -->
+    <VBox spacing="10" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="200">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+        <Button fx:id="btnSelectCoursesCSV" text="Select Courses CSV" onAction="#handleSelectCoursesCSV"/>
+        <Button fx:id="btnSelectClassroomsCSV" text="Select Classrooms CSV" onAction="#handleSelectClassroomsCSV"/>
+        <Button fx:id="btnImport" text="Import Data" onAction="#handleImport" disable="true"/>
+    </VBox>
+
+    <!-- Listing Buttons -->
+    <HBox spacing="20">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+        <Button fx:id="btnListCourses" text="List Courses" onAction="#handleListCourses"/>
+        <Button fx:id="btnListClassrooms" text="List Classrooms" onAction="#handleListClassrooms"/>
+        <Button fx:id="btnAssignCourses" text="Assign Courses" onAction="#handleAssignCourses" disable="true"/>
+    </HBox>
+
+    <!-- Main Display Section -->
+    <HBox spacing="20">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+
+        <!-- Courses Display -->
+        <HBox spacing="20">
+            <padding>
+                <Insets top="0" right="0" bottom="0" left="0"/>
+            </padding>
+
+            <!-- Courses and Details -->
+            <VBox spacing="10">
+                <!-- Courses Section -->
+                <VBox spacing="5" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="300">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    <Label text="Courses:"/>
+                    <ListView fx:id="coursesListView" prefHeight="200"/>
+                </VBox>
+
+                <!-- Course Details Section -->
+                <VBox spacing="5" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="300">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    <Label fx:id="lblCourseID" text="Course ID: "/>
+                    <Label fx:id="lblTimeToStart" text="Time to Start: "/>
+                    <Label fx:id="lblDuration" text="Duration (Hours): "/>
+                    <Label fx:id="lblLecturer" text="Lecturer: "/>
+                    <Label fx:id="lblAssignedClassroom" text="Assigned Classroom: "/>
+                </VBox>
+            </VBox>
+
+            <!-- Students Section -->
+            <VBox spacing="5" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="300">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Students:"/>
+                <ListView fx:id="studentsListView" prefHeight="200"/>
+            </VBox>
+        </HBox>
+
+        <!-- Classrooms Display -->
+        <VBox spacing="20">
+            <padding>
+                <Insets top="0" right="0" bottom="0" left="0"/>
+            </padding>
+
+            <!-- Classrooms and Details -->
+            <VBox spacing="10">
+                <!-- Classrooms Section -->
+                <VBox spacing="5" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="300">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    <Label text="Classrooms:"/>
+                    <ListView fx:id="classroomsListView" prefHeight="200"/>
+                </VBox>
+
+                <!-- Classroom Details Section -->
+                <VBox spacing="5" style="-fx-border-color: black; -fx-border-width: 1;" prefWidth="300">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    <Label fx:id="lblClassroomCapacity" text="Capacity: "/>
+                </VBox>
+            </VBox>
         </VBox>
-    </top>
-
-    <!-- Sağ Kenar Paneli -->
-    <right>
-        <VBox spacing="10" alignment="CENTER">
-            <Button text="Manage Course" />
-            <Button text="Create Meeting" />
-        </VBox>
-    </right>
-
-    <!-- Merkez İçeriği (Varsayılan) -->
-    <center>
-        <Label text="Welcome to Main Interface" />
-    </center>
-</BorderPane>
+    </HBox>
+</VBox>

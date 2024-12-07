@@ -8,13 +8,15 @@ public class Course {
     private final int durationInLectureHours;
     private final String lecturer;
     private List<Student> enrolledStudents;
+    private Classroom assignedClassroom;
 
 
-    public Course(String courseID, String timeToStart, int durationInLectureHours, String lecturer) {
+    public Course(String courseID, String timeToStart, int durationInLectureHours, String lecturer, Classroom assignedClassroom) {
         this.code = courseID;
         this.timeToStart = timeToStart;
         this.durationInLectureHours = durationInLectureHours;
         this.lecturer = lecturer;
+        this.assignedClassroom = assignedClassroom;
     }
 
     // Getters
@@ -32,6 +34,10 @@ public class Course {
 
     public String getLecturer() {
         return lecturer;
+    }
+
+    public Classroom getAssignedClassroom() {
+        return assignedClassroom;
     }
 
     // Optional: Setters if you plan to modify course details in the future

@@ -9,7 +9,7 @@ import javafx.scene.Parent;
 public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("studentScheduleUI.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("mainGUI.fxml"));
         Parent root = loader.load();
         System.out.println("..");
         primaryStage.setTitle("Main Interface");

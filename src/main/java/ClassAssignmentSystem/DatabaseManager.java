@@ -1,6 +1,11 @@
 package ClassAssignmentSystem;
-import java.util.List;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseManager {
 
@@ -99,7 +104,7 @@ public class DatabaseManager {
         }
     }
 
-    //For adding Classroom CSV data to Courses Table.
+    // For adding Classroom CSV data to Classrooms Table.
     public void insertClassroomData(String tableName, String[] columnNames, List<String[]> data) throws SQLException {
         if (data.isEmpty()) return;
 
@@ -111,36 +116,26 @@ public class DatabaseManager {
         sql.append("?,".repeat(columnNames.length));
         sql.deleteCharAt(sql.length() - 1).append(")");
 
-        //For test and debugging purposes
+        // For test and debugging purposes
         System.out.println("Generated SQL: " + sql);
 
         try (Connection conn = getConnection();
-             PreparedStatement classroomsStmt = conn.prepareStatement(sql.toString());
-             PreparedStatement checkExistStmt = conn.prepareStatement("SELECT COUNT(*) FROM " + tableName + " WHERE Classroom = ? AND Capacity = ?")) {
+             PreparedStatement classroomsStmt = conn.prepareStatement(sql.toString())) {
 
             for (String[] row : data) {  // Skip the header row
-                //Check row length matches the number of columns ("Classroom","Capacity")
                 if (row.length != columnNames.length) {
                     System.err.println("Warning: Skipping row with mismatched columns.");
                     continue;
                 }
 
-                //Check if the data already exists
-                checkExistStmt.setString(1, row[0]); // Classroom
-                checkExistStmt.setString(2, row[1]); // Capacity
+                for (int i = 0; i < columnNames.length; i++) {
+                    classroomsStmt.setString(i + 1, row[i]);
+                }
 
-                ResultSet rs = checkExistStmt.executeQuery();
-                rs.next();
-                int count = rs.getInt(1);
-
-                if (count == 0) {
-                    for (int colIndex = 0; colIndex < row.length; colIndex++) {
-                        classroomsStmt.setString(colIndex + 1, row[colIndex]);
-                    }
+                try {
                     classroomsStmt.executeUpdate();
-                } else {
-                    //For Test
-                    System.out.println("Skipping duplicate entry for classroom: " + row[0]);
+                } catch (SQLException e) {
+                    System.err.println("Error inserting into Classrooms table: " + e.getMessage());
                 }
             }
         } catch (SQLException e) {
@@ -149,6 +144,175 @@ public class DatabaseManager {
         }
     }
 
+    // Read CSV file and return list of String arrays
+    public List<String[]> readCSV(File file) throws Exception {
+        List<String[]> data = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                data.add(line.split(";"));  // Note: Using ';' as delimiter
+            }
+        }
+        return data;
+    }
+
+    // Retrieve all courses
+    public List<String> getAllCourses() throws SQLException {
+        List<String> courses = new ArrayList<>();
+        String query = "SELECT Course FROM Courses";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                courses.add(rs.getString("Course"));
+            }
+        }
+        return courses;
+    }
+
+    // Retrieve all classrooms
+    public List<String> getAllClassrooms() throws SQLException {
+        List<String> classrooms = new ArrayList<>();
+        String query = "SELECT Classroom FROM Classrooms";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                classrooms.add(rs.getString("Classroom"));
+            }
+        }
+        return classrooms;
+    }
+
+    // Assign courses to classrooms (simple assignment for demonstration)
+    public boolean assignCoursesToClassrooms() throws SQLException {
+        String selectCourses = "SELECT Course FROM Courses WHERE Course NOT IN (SELECT Course FROM Course)";
+        String selectClassrooms = "SELECT Classroom, Capacity FROM Classrooms";
+        String insertAssignment = "INSERT INTO Course (Course, Classroom) VALUES (?, ?)";
+
+        try (Connection conn = getConnection();
+             Statement courseStmt = conn.createStatement();
+             ResultSet courseRs = courseStmt.executeQuery(selectCourses);
+             Statement classStmt = conn.createStatement();
+             ResultSet classRs = classStmt.executeQuery(selectClassrooms);
+             PreparedStatement insertStmt = conn.prepareStatement(insertAssignment)) {
+
+            List<String> availableClassrooms = new ArrayList<>();
+            while (classRs.next()) {
+                availableClassrooms.add(classRs.getString("Classroom"));
+            }
+
+            int classroomIndex = 0;
+            while (courseRs.next()) {
+                String courseId = courseRs.getString("Course");
+                if (classroomIndex >= availableClassrooms.size()) {
+                    // Not enough classrooms to assign
+                    return false;
+                }
+                String classroomId = availableClassrooms.get(classroomIndex);
+                insertStmt.setString(1, courseId);
+                insertStmt.setString(2, classroomId);
+                insertStmt.executeUpdate();
+                classroomIndex++;
+            }
+
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error during course assignment: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Retrieve course details
+    public Course getCourseDetails(String courseCode) throws SQLException {
+        String query = "SELECT * FROM Courses WHERE Course = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, courseCode);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    //String courseCode = rs.getString("CourseCode");
+                    String timeToStart = rs.getString("TimeToStart");
+                    int duration = Integer.parseInt(rs.getString("Duration"));
+                    String lecturer = rs.getString("Lecturer");
+                    Classroom assignedClassroom = new Classroom(getAssignedClassroom(courseCode),getClassroomCapacity(courseCode));
+                    return new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
+                }
+            }
+        }
+        return null;
+    }
+
+    // Retrieve assigned classroom for a course
+    private String getAssignedClassroom(String courseCode) throws SQLException {
+        String query = "SELECT Classroom FROM Courses WHERE Course = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, courseCode);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("ClassroomName");
+                }
+            }
+        }
+        return null;
+    }
+
+    // Retrieve classroom details
+    public Classroom getClassroomDetails(String classroomName) throws SQLException {
+        String query = "SELECT * FROM Classrooms WHERE Classroom = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, classroomName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int capacity = Integer.parseInt(rs.getString("Capacity"));
+                    return new Classroom(classroomName, capacity);
+                }
+            }
+        }
+        return null;
+    }
+
+    // Retrieve students for a course
+    public List<String> getStudentsForCourse(String courseID) throws SQLException {
+        List<String> students = new ArrayList<>();
+        String query = "SELECT Students FROM Courses WHERE Course = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, courseID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    students.add(rs.getString("StudentName"));
+                }
+            }
+        }
+        return students;
+    }
+
+    // Retrieve classroom capacity
+    public Integer getClassroomCapacity(String classroomName) throws SQLException {
+        String query = "SELECT Capacity FROM Classrooms WHERE Classroom = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, classroomName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Integer.parseInt(rs.getString("Capacity"));
+                }
+            }
+        }
+        return 0;
+    }
+
+    // Example method for selecting data (already provided)
     public static Object selectInit(String entity, String attribute, String condition) {
         String selectQuery = "SELECT " + attribute + "\nFROM " + entity + "\nWHERE " + condition + ";";
 
@@ -162,11 +326,9 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
-            //throw new RuntimeException(e);
             System.out.println("Illegal argument.");
         }
 
         return null;
     }
-
 }
