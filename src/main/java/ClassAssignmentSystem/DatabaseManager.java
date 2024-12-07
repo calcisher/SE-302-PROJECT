@@ -1,8 +1,5 @@
 package ClassAssignmentSystem;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -227,8 +224,8 @@ public class DatabaseManager {
                     String timeToStart = rs.getString("TimeToStart");
                     int duration = Integer.parseInt(rs.getString("DurationInLectureHours"));
                     String lecturer = rs.getString("Lecturer");
-                    Classroom assignedClassroom = new Classroom(getAssignedClassroom(courseCode),getClassroomCapacity(courseCode));
-                    return new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
+                    //Classroom assignedClassroom = new Classroom(getAssignedClassroom(courseCode),getClassroomCapacity(courseCode));
+                    return new Course(courseCode, timeToStart, duration, lecturer, null);
                 }
             }
         }
@@ -269,13 +266,13 @@ public class DatabaseManager {
     }
 
     // Retrieve students for a course
-    public List<String> getStudentsForCourse(String courseID) throws SQLException {
+    public List<String> getStudentsForCourse(String course) throws SQLException {
         List<String> students = new ArrayList<>();
         String query = "SELECT Students FROM Courses WHERE Course = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setString(1, courseID);
+            stmt.setString(1, course);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     students.add(rs.getString("Students"));
