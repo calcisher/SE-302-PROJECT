@@ -12,7 +12,7 @@ public class DatabaseManager {
     private static String databasePath;
 
     public DatabaseManager(String databasePath) {
-        this.databasePath = databasePath;
+        DatabaseManager.databasePath = databasePath;
         try (Connection conn = getConnection()) {
             if (conn != null) {
                 System.out.println("Connected to the database.");
@@ -144,22 +144,11 @@ public class DatabaseManager {
         }
     }
 
-    // Read CSV file and return list of String arrays
-    public List<String[]> readCSV(File file) throws Exception {
-        List<String[]> data = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                data.add(line.split(";"));  // Note: Using ';' as delimiter
-            }
-        }
-        return data;
-    }
 
     // Retrieve all courses
     public List<String> getAllCourses() throws SQLException {
         List<String> courses = new ArrayList<>();
-        String query = "SELECT Course FROM Courses";
+        String query = "SELECT DISTINCT Course FROM Courses";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -226,17 +215,17 @@ public class DatabaseManager {
     }
 
     // Retrieve course details
-    public Course getCourseDetails(String courseCode) throws SQLException {
+    public Course getCourseDetails(String course) throws SQLException {
         String query = "SELECT * FROM Courses WHERE Course = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setString(1, courseCode);
+            stmt.setString(1, course);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    //String courseCode = rs.getString("CourseCode");
+                    String courseCode = rs.getString("Course");
                     String timeToStart = rs.getString("TimeToStart");
-                    int duration = Integer.parseInt(rs.getString("Duration"));
+                    int duration = Integer.parseInt(rs.getString("DurationInLectureHours"));
                     String lecturer = rs.getString("Lecturer");
                     Classroom assignedClassroom = new Classroom(getAssignedClassroom(courseCode),getClassroomCapacity(courseCode));
                     return new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
@@ -255,7 +244,7 @@ public class DatabaseManager {
             stmt.setString(1, courseCode);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getString("ClassroomName");
+                    return rs.getString("Classroom");
                 }
             }
         }
@@ -289,7 +278,7 @@ public class DatabaseManager {
             stmt.setString(1, courseID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    students.add(rs.getString("StudentName"));
+                    students.add(rs.getString("Students"));
                 }
             }
         }

@@ -13,7 +13,7 @@ public class MainViewController {
     // File References
     private File coursesCsvFile = null;
     private File classroomsCsvFile = null;
-    private final DatabaseManager dbManager = new DatabaseManager("university1.db");
+    private final DatabaseManager dbManager = new DatabaseManager("university.db");
 
     // UI Components - Buttons
     @FXML
@@ -67,17 +67,6 @@ public class MainViewController {
     // Initialization method
     @FXML
     public void initialize() {
-        // Create necessary tables if they don't exist
-        try {
-            dbManager.createTable("Courses", new String[]{"Course", "TimeToStart", "DurationInLectureHours", "Lecturer", "Students"});
-            dbManager.createTable("Classrooms", new String[]{"Classroom", "Capacity"});
-            //dbManager.createTable("Students", new String[]{"StudentID", "StudentName"});
-            //dbManager.createTable("CourseAssignments", new String[]{"CourseID", "ClassroomID"});
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Initialization Error", "Failed to create necessary tables.");
-        }
-
         // Disable Import button until both CSV files are selected
         updateImportButtonState();
 
@@ -127,23 +116,9 @@ public class MainViewController {
     // Handler for Import button
     @FXML
     private void handleImport() {
-        if (coursesCsvFile != null && classroomsCsvFile != null) {
             try {
-                // Import Courses
-                List<String[]> courseData = CSVImporter.readCSV(coursesCsvFile);
-                if (!courseData.isEmpty()) {
-                    String[] courseColumns = courseData.getFirst();
-                    dbManager.createTable("Courses", courseColumns);
-                    dbManager.insertCourseData("Courses", courseColumns, courseData.subList(1, courseData.size()));
-                }
-
-                // Import Classrooms
-                List<String[]> classroomData = CSVImporter.readCSV(classroomsCsvFile);
-                if (!classroomData.isEmpty()) {
-                    String[] classroomColumns = classroomData.getFirst();
-                    dbManager.createTable("Classrooms", classroomColumns);
-                    dbManager.insertClassroomData("Classrooms", classroomColumns, classroomData.subList(1, classroomData.size()));
-                }
+                CSVImporter.importClassroomData(classroomsCsvFile,dbManager);
+                CSVImporter.importCourseData(coursesCsvFile,dbManager);
 
                 showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
                 btnAssignCourses.setDisable(false); // Enable Assign Courses button after import
@@ -151,7 +126,6 @@ public class MainViewController {
                 e.printStackTrace();
                 showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
             }
-        }
     }
 
     // Handler for List Courses button
