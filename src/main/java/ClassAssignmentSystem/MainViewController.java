@@ -226,11 +226,25 @@ public class MainViewController {
             try {
                 Course course = dbManager.getCourseDetails(courseName);
                 if (course != null) {
+                    // Debugging Statements
+                    System.out.println("Displaying details for course: " + course.getCode());
+                    System.out.println("Assigned Classroom: " +
+                            (course.getAssignedClassroom() != null ? course.getAssignedClassroom().getName() : "Not Assigned"));
+
+                    // Update Labels
                     lblCourseID.setText("Course Code: " + course.getCode());
                     lblTimeToStart.setText("Time to Start: " + course.getTimeToStart());
                     lblDuration.setText("Duration (Hours): " + course.getDurationInLectureHours());
                     lblLecturer.setText("Lecturer: " + course.getLecturer());
-                    lblAssignedClassroom.setText("Assigned Classroom: " + (course.getAssignedClassroom() != null ? course.getAssignedClassroom() : "Not Assigned"));
+
+                    // Correct Label Assignment for Assigned Classroom
+                    if (course.getAssignedClassroom() != null) {
+                        lblAssignedClassroom.setText("Assigned Classroom: " + course.getAssignedClassroom().getName());
+                        lblAssignedClassroom.setTooltip(new Tooltip(course.getAssignedClassroom().getName()));
+                    } else {
+                        lblAssignedClassroom.setText("Assigned Classroom: Not Assigned");
+                        lblAssignedClassroom.setTooltip(new Tooltip("No classroom assigned."));
+                    }
 
                     // Populate students list
                     List<String> students = dbManager.getStudentsForCourse(course.getCode());
@@ -245,6 +259,7 @@ public class MainViewController {
             }
         }
     }
+
 
     // Display classroom details
     private void displayClassroomDetails(String classroomName) {
