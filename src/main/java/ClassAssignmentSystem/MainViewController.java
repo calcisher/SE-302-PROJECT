@@ -165,7 +165,7 @@ public class MainViewController {
             try {
                 CSVImporter.importClassroomData(classroomsCsvFile,dbManager);
                 CSVImporter.importCourseData(coursesCsvFile,dbManager);
-
+                dbManager.addClassroomColumnIfMissing();
                 showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
                 btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
                 btnDelete.setDisable(false); //Enable delete data button after import

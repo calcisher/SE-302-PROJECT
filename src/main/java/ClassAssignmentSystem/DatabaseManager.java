@@ -26,8 +26,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection()) {
             if (conn != null) {
                 System.out.println("Connected to the database.");
-                addClassroomColumnIfMissing(); // Ensure Classroom column exists
-                loadExistingSchedules(conn);
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -49,6 +48,18 @@ public class DatabaseManager {
             stmt.execute(sql.toString());
         }
     }
+
+
+    public void initializeDatabaseAfterImport() {
+        try (Connection conn = getConnection()) {
+            addClassroomColumnIfMissing();
+            loadExistingSchedules(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle or propagate the exception as needed
+        }
+    }
+
 
     public void addClassroomColumnIfMissing() throws SQLException {
         String checkColumnQuery = "PRAGMA table_info(Courses);";

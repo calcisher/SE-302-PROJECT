@@ -64,6 +64,7 @@ public class CSVImporter {
                 }
 
                 db.createTable("Courses", columnsWithTypes);
+                db.addClassroomColumnIfMissing();
                 db.insertCourseData("Courses", courseColumns, courseData.subList(1, courseData.size()));
             }
         } catch (Exception e) {
