@@ -391,7 +391,9 @@ public class DatabaseManager {
 
     // Retrieve course details
     public Course getCourseDetails(String course) throws SQLException {
-        String query = "SELECT Course, TimeToStart, DurationInLectureHours, Lecturer, Classroom FROM Courses WHERE Course = ? AND Classroom IS NOT NULL LIMIT 1";
+        String query = "SELECT Course, TimeToStart, DurationInLectureHours, Lecturer, Classroom " +
+                "FROM Courses WHERE Course = ? LIMIT 1";
+
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -409,7 +411,11 @@ public class DatabaseManager {
                         classroomName = null;
                     }
 
-                    Classroom assignedClassroom = (classroomName != null) ? getClassroomDetails(classroomName) : null;
+                    Classroom assignedClassroom = (classroomName != null && !classroomName.trim().isEmpty())
+                            ? getClassroomDetails(classroomName)
+                            : null;
+
+                    //Classroom assignedClassroom = (classroomName != null) ? getClassroomDetails(classroomName) : null;
                     return new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
                 }
             }
