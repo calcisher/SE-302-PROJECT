@@ -595,5 +595,58 @@ public class DatabaseManager {
         }
     }
 
+    // In DatabaseManager
+
+    public List<Course> getCoursesForStudent(String studentName) throws SQLException {
+        List<Course> courses = new ArrayList<>();
+        String query = "SELECT Course, TimeToStart, DurationInLectureHours, Lecturer, Classroom FROM Courses WHERE Students = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, studentName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String courseCode = rs.getString("Course");
+                    String timeToStart = rs.getString("TimeToStart");
+                    int duration = rs.getInt("DurationInLectureHours");
+                    String lecturer = rs.getString("Lecturer");
+                    String classroomName = rs.getString("Classroom");
+                    Classroom c = null;
+                    if (classroomName != null && !classroomName.trim().isEmpty()) {
+                        c = getClassroomDetails(classroomName);
+                    }
+                    courses.add(new Course(courseCode, timeToStart, duration, lecturer, c));
+                }
+            }
+        }
+        return courses;
+    }
+
+    public List<Course> getCoursesForClassroom(String classroomName) throws SQLException {
+        List<Course> courses = new ArrayList<>();
+        String query = "SELECT DISTINCT Course, TimeToStart, DurationInLectureHours, Lecturer, Classroom FROM Courses WHERE Classroom = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, classroomName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String courseCode = rs.getString("Course");
+                    String timeToStart = rs.getString("TimeToStart");
+                    int duration = rs.getInt("DurationInLectureHours");
+                    String lecturer = rs.getString("Lecturer");
+                    String assignedClassroom = rs.getString("Classroom");
+                    Classroom c = null;
+                    if (assignedClassroom != null && !assignedClassroom.trim().isEmpty()) {
+                        c = getClassroomDetails(assignedClassroom);
+                    }
+                    courses.add(new Course(courseCode, timeToStart, duration, lecturer, c));
+                }
+            }
+        }
+        return courses;
+    }
+
+
 
 }

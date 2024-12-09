@@ -22,13 +22,13 @@
         </padding>
         <Button fx:id="btnSelectCoursesCSV" onAction="#handleSelectCoursesCSV" text="Select Courses CSV" />
         <Button fx:id="btnSelectClassroomsCSV" onAction="#handleSelectClassroomsCSV" text="Select Classrooms CSV" />
-      <HBox prefHeight="50.0" prefWidth="938.0">
-         <children>
-              <Button fx:id="btnImport" disable="true" onAction="#handleImport" prefHeight="32.0" prefWidth="93.0" text="Import Data" />
-            <Separator prefHeight="32.0" prefWidth="29.0" />
-            <Button fx:id="btnDelete" disable="true" onAction="#handleDelete" prefHeight="32.0" prefWidth="93.0" text="Delete Data" textAlignment="CENTER" />
-         </children>
-      </HBox>
+        <HBox prefHeight="50.0" prefWidth="938.0">
+            <children>
+                <Button fx:id="btnImport" disable="true" onAction="#handleImport" prefHeight="32.0" prefWidth="93.0" text="Import Data" />
+                <Separator prefHeight="32.0" prefWidth="29.0" />
+                <Button fx:id="btnDelete" disable="true" onAction="#handleDelete" prefHeight="32.0" prefWidth="93.0" text="Delete Data" textAlignment="CENTER" />
+            </children>
+        </HBox>
     </VBox>
 
     <!-- Listing Buttons -->
@@ -39,6 +39,9 @@
         <Button fx:id="btnListCourses" onAction="#handleListCourses" text="List Courses" />
         <Button fx:id="btnListClassrooms" onAction="#handleListClassrooms" text="List Classrooms" />
         <Button fx:id="btnAssignCourses" disable="true" onAction="#handleAssignCourses" text="Assign Courses" />
+        <!-- New Buttons for Weekly Schedules -->
+        <Button fx:id="btnStudentWeeklySchedule" text="Student Weekly Schedule" onAction="#handleShowStudentWeeklySchedule" disable="true" />
+        <Button fx:id="btnClassroomWeeklySchedule" text="Classroom Weekly Schedule" onAction="#handleShowClassroomWeeklySchedule" disable="true" />
     </HBox>
 
     <!-- Main Display Section -->
