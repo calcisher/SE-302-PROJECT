@@ -18,11 +18,11 @@ public class DatabaseManager {
 
 
     // Store classroom schedules in-memory to track assignments during the operation
-    private Map<String, List<CourseSchedule>> classroomSchedules;
+    private Map<String, List<Schedule>> Schedules;
 
     public DatabaseManager(String databasePath) {
         DatabaseManager.databasePath = databasePath;
-        classroomSchedules = new HashMap<>();
+        Schedules = new HashMap<>();
         try (Connection conn = getConnection()) {
             if (conn != null) {
                 System.out.println("Connected to the database.");
@@ -297,13 +297,13 @@ public class DatabaseManager {
             // Step 5: Attempt to assign to an eligible classroom without time conflicts
             boolean assigned = false;
             for (Classroom room : eligibleClassrooms) {
-                CourseSchedule courseSchedule = parseCourseSchedule(course.timeToStart, course.durationInLectureHours);
+                Schedule courseSchedule = parseSchedule(course.timeToStart, course.durationInLectureHours);
                 if (courseSchedule == null) {
                     System.err.println("Invalid schedule for course: " + course.courseCode);
                     continue;
                 }
 
-                List<CourseSchedule> existingSchedules = classroomSchedules.getOrDefault(room.getName(), new ArrayList<>());
+                List<Schedule> existingSchedules = Schedules.getOrDefault(room.getName(), new ArrayList<>());
                 boolean conflict = existingSchedules.stream().anyMatch(existing -> existing.overlapsWith(courseSchedule));
 
                 if (!conflict) {
@@ -311,7 +311,7 @@ public class DatabaseManager {
                     assignClassroomToCourse(course.courseCode, room.getName());
                     // Update in-memory schedule
                     existingSchedules.add(courseSchedule);
-                    classroomSchedules.put(room.getName(), existingSchedules);
+                    Schedules.put(room.getName(), existingSchedules);
                     System.out.println("Assigned classroom " + room.getName() + " to course " + course.courseCode);
                     assigned = true;
                     break; // Move to the next course after successful assignment
@@ -522,9 +522,9 @@ public class DatabaseManager {
                 int duration = rs.getInt("DurationInLectureHours");
                 String classroom = rs.getString("Classroom");
 
-                CourseSchedule schedule = parseCourseSchedule(timeToStart, duration);
+                Schedule schedule = parseSchedule(timeToStart, duration);
                 if (schedule != null) {
-                    classroomSchedules
+                    Schedules
                             .computeIfAbsent(classroom, k -> new ArrayList<>())
                             .add(schedule);
                 }
@@ -533,7 +533,7 @@ public class DatabaseManager {
     }
 
 
-    private CourseSchedule parseCourseSchedule(String timeToStart, int durationInLectureHours) {
+    private Schedule parseSchedule(String timeToStart, int durationInLectureHours) {
         try {
             // Assuming timeToStart is in format "Monday 8:30"
             String[] parts = timeToStart.split(" ");
@@ -558,7 +558,7 @@ public class DatabaseManager {
             int totalMinutes = durationInLectureHours * (45 + 10) - 10; // Remove last break
             LocalTime endTime = startTime.plusMinutes(totalMinutes);
 
-            return new CourseSchedule(day, startTime, endTime);
+            return new Schedule(day, startTime, endTime);
         } catch (Exception e) {
             System.err.println("Error parsing course schedule: " + e.getMessage());
             return null;
@@ -577,30 +577,5 @@ public class DatabaseManager {
             this.durationInLectureHours = durationInLectureHours;
         }
     }
-
-    private static class CourseSchedule {
-        DayOfWeek day;
-        LocalTime startTime;
-        LocalTime endTime;
-
-        CourseSchedule(DayOfWeek day, LocalTime startTime, LocalTime endTime) {
-            this.day = day;
-            this.startTime = startTime;
-            this.endTime = endTime;
-        }
-
-        /**
-         * Checks if this schedule overlaps with another schedule.
-         * @param other The other CourseSchedule to compare with.
-         * @return true if there is an overlap, false otherwise.
-         */
-        boolean overlapsWith(CourseSchedule other) {
-            if (this.day != other.day) {
-                return false;
-            }
-            return this.startTime.isBefore(other.endTime) && other.startTime.isBefore(this.endTime);
-        }
-    }
-
 
 }

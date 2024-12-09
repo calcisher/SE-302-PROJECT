@@ -1,23 +1,23 @@
 package ClassAssignmentSystem;
 
-public class Schedule {
-    private String startTime;
-    private String endTime;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 
-    public Schedule(String startTime, String endTime) {
+public class Schedule {
+    DayOfWeek day;
+    LocalTime startTime;
+    LocalTime endTime;
+
+    Schedule(DayOfWeek day, LocalTime startTime, LocalTime endTime) {
+        this.day = day;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public boolean isConflict(Schedule otherSchedule) {
-        return false;
+    public boolean overlapsWith(Schedule other) {
+        if (this.day != other.day) {
+            return false;
+        }
+        return this.startTime.isBefore(other.endTime) && other.startTime.isBefore(this.endTime);
     }
 }
