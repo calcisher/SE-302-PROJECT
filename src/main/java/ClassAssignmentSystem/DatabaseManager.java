@@ -542,7 +542,14 @@ public class DatabaseManager {
                 return null;
             }
 
-            DayOfWeek day = DayOfWeek.valueOf(parts[0].toUpperCase());
+            DayOfWeek day;
+            if (parts[0].equals("Friday")) {
+                 day = DayOfWeek.FRIDAY;
+            }
+            else {
+                 day = DayOfWeek.valueOf(parts[0].toUpperCase());
+            }
+
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
             LocalTime startTime = LocalTime.parse(parts[1], timeFormatter);
 
@@ -577,9 +584,6 @@ public class DatabaseManager {
         LocalTime endTime;
 
         CourseSchedule(DayOfWeek day, LocalTime startTime, LocalTime endTime) {
-            if(DayOfWeek.FRIDAY.equals("FRİDAY")){
-                day=DayOfWeek.FRIDAY;
-            }
             this.day = day;
             this.startTime = startTime;
             this.endTime = endTime;
