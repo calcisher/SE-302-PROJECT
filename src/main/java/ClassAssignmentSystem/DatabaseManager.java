@@ -577,6 +577,9 @@ public class DatabaseManager {
         LocalTime endTime;
 
         CourseSchedule(DayOfWeek day, LocalTime startTime, LocalTime endTime) {
+            if(DayOfWeek.FRIDAY.equals("FRİDAY")){
+                day=DayOfWeek.FRIDAY;
+            }
             this.day = day;
             this.startTime = startTime;
             this.endTime = endTime;
