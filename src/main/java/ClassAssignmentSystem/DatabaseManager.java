@@ -70,7 +70,7 @@ public class DatabaseManager {
                     try {
                         LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
 
-                        String courseAndClassroom = course + " (" + classroom + ")";
+                        String courseAndClassroom = course + " \n(" + classroom + ")";
 
                         if (weeklySchedule.containsKey(day)) {
                             for (int i = 0; i < duration; i++) {
@@ -115,7 +115,6 @@ public class DatabaseManager {
         return scheduleData;
     }
 
-    
 
     public static ObservableList<String> getDistinctStudentNames() {
         ObservableList<String> studentNames = FXCollections.observableArrayList();
