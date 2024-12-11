@@ -12,6 +12,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.io.IOException;
+import java.util.List;
 
 public class StudentListController {
 
@@ -70,12 +71,13 @@ public class StudentListController {
 
     @FXML
     private void handleFindAvailableTimeSlots(ActionEvent event) {
+        List<Student> selectedStudents = new java.util.ArrayList<>(List.of());
         for (Student student : studentList) {
             if (student.getSelectBox().isSelected()) {
-                System.out.println("Finding available time slots for: " + student.getName());
-                // Logic for finding available time slots
+                selectedStudents.add(student);
             }
         }
+        openFreeTimeSlots(studentList);
     }
 
     public static void openStudentSchedule(String studentName) {
@@ -88,6 +90,23 @@ public class StudentListController {
 
             Stage stage = new Stage();
             stage.setTitle("Schedule for " + studentName);
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openFreeTimeSlots(List<Student> students) {
+        try {
+            FXMLLoader loader = new FXMLLoader(StudentListController.class.getResource("scheduleUI.fxml"));
+            Parent root = loader.load();
+
+            ScheduleController controller = loader.getController();
+            controller.loadFreeTimeSchedule(students);
+
+            Stage stage = new Stage();
+            stage.setTitle("Free Times For Students");
             stage.setScene(new Scene(root));
             stage.show();
         } catch (IOException e) {

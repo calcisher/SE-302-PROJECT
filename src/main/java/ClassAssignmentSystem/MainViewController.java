@@ -264,7 +264,7 @@ public class MainViewController {
         }
     }
 
-    
+
     // Display course details and associated students
     private void displayCourseDetails(String courseName) {
         if (courseName != null) {

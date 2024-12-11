@@ -6,6 +6,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+
 public class ScheduleController {
     @FXML
     private TableView<ScheduleEntry> scheduleTable;
@@ -40,6 +42,11 @@ public class ScheduleController {
         ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getClassSchedule(className);
         scheduleTable.setItems(scheduleData);
     }
+    public void loadFreeTimeSchedule(List<Student> students) {
+        ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getFreeTimeSchedule(students);
+        scheduleTable.setItems(scheduleData);
+    }
+
 
     public static class ScheduleEntry {
         private String time;

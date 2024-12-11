@@ -192,6 +192,93 @@ public class DatabaseManager {
         return scheduleData;
     }
 
+    public static ObservableList<ScheduleController.ScheduleEntry> getFreeTimeSchedule(List<Student> students) {
+        ObservableList<ScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
+
+        try (Connection connection = getConnection()) {
+            Map<String, Map<LocalTime, Boolean>> freeTimeSlots = new HashMap<>();
+            String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+
+            for (String day : days) {
+                Map<LocalTime, Boolean> dailySchedule = new TreeMap<>();
+                LocalTime currentTime = LocalTime.of(8, 30);
+                LocalTime endTime = LocalTime.of(22, 15);
+
+                while (!currentTime.isAfter(endTime)) {
+                    dailySchedule.put(currentTime, true);
+                    currentTime = currentTime.plusMinutes(55);
+                }
+                freeTimeSlots.put(day, dailySchedule);
+            }
+
+            for (Student student : students) {
+                String query = "SELECT TimeToStart, DurationInLectureHours FROM Courses WHERE Students = ?";
+                try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                    preparedStatement.setString(1, student.getName());
+                    ResultSet resultSet = preparedStatement.executeQuery();
+
+                    while (resultSet.next()) {
+                        String timeToStart = resultSet.getString("TimeToStart");
+                        int duration = resultSet.getInt("DurationInLectureHours");
+                        String[] parts = timeToStart.split(" ");
+                        if (parts.length == 2) {
+                            String day = parts[0];
+                            String time = parts[1];
+
+                            try {
+                                LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
+
+                                if (freeTimeSlots.containsKey(day)) {
+                                    for (int i = 0; i < duration; i++) {
+                                        LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                        if (freeTimeSlots.get(day).containsKey(slotTime)) {
+                                            freeTimeSlots.get(day).put(slotTime, false); // Dolu zaman dilimi
+                                        }
+                                    }
+                                }
+                            } catch (DateTimeParseException e) {
+                                System.err.println("Invalid Time Format: " + time);
+                            }
+                        }
+                    }
+                }
+            }
+
+            LocalTime currentTime = LocalTime.of(8, 30);
+            LocalTime endTime = LocalTime.of(22, 15);
+
+            while (!currentTime.isAfter(endTime)) {
+                String time = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
+
+                String monday = isSlotFree(freeTimeSlots.get("Monday"), currentTime) ? "Free" : "";
+                String tuesday = isSlotFree(freeTimeSlots.get("Tuesday"), currentTime) ? "Free" : "";
+                String wednesday = isSlotFree(freeTimeSlots.get("Wednesday"), currentTime) ? "Free" : "";
+                String thursday = isSlotFree(freeTimeSlots.get("Thursday"), currentTime) ? "Free" : "";
+                String friday = isSlotFree(freeTimeSlots.get("Friday"), currentTime) ? "Free" : "";
+
+                scheduleData.add(new ScheduleController.ScheduleEntry(
+                        time,
+                        monday,
+                        tuesday,
+                        wednesday,
+                        thursday,
+                        friday
+                ));
+
+                currentTime = currentTime.plusMinutes(55);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return scheduleData;
+    }
+
+    private static boolean isSlotFree(Map<LocalTime, Boolean> dailySchedule, LocalTime timeSlot) {
+        return dailySchedule != null && dailySchedule.getOrDefault(timeSlot, false);
+    }
+
 
     public static ObservableList<String> getDistinctStudentNames() {
         ObservableList<String> studentNames = FXCollections.observableArrayList();
