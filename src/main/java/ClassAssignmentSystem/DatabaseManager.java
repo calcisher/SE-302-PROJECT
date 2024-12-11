@@ -508,7 +508,7 @@ public class DatabaseManager {
     }
 
 
-    private Map<String, Integer> getCourseStudentCounts() throws SQLException {
+    public Map<String, Integer> getCourseStudentCounts() throws SQLException {
         Map<String, Integer> courseCounts = new HashMap<>();
         String query = "SELECT Course, COUNT(Students) as StudentCount FROM Courses GROUP BY Course";
         try (Connection conn = getConnection();
@@ -543,7 +543,7 @@ public class DatabaseManager {
 
     private List<Classroom> getAllClassroomsWithCapacity() throws SQLException {
         List<Classroom> classrooms = new ArrayList<>();
-        String query = "SELECT Classroom, Capacity FROM Classrooms";
+        String query = "SELECT DISTINCT Classroom, Capacity FROM Classrooms";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -593,13 +593,18 @@ public class DatabaseManager {
                             ? getClassroomDetails(classroomName)
                             : null;
 
-                    //Classroom assignedClassroom = (classroomName != null) ? getClassroomDetails(classroomName) : null;
-                    return new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
+                    // Retrieve and set student count
+                    int studentCount = getCourseStudentCounts().getOrDefault(courseCode, 0);
+
+                    Course courseObj = new Course(courseCode, timeToStart, duration, lecturer, assignedClassroom);
+                    courseObj.setStudentCount(studentCount);
+                    return courseObj;
                 }
             }
         }
         return null;
     }
+
 
 
 
@@ -742,5 +747,68 @@ public class DatabaseManager {
             return null;
         }
     }
+
+    public List<Classroom> getAvailableClassroomsForCourse(Course course) throws SQLException {
+        int studentCount = course.getStudentCount();
+        List<Classroom> suitableClassrooms = getAllClassroomsWithCapacity().stream()
+                .filter(classroom -> classroom.getCapacity() >= studentCount)
+                .collect(Collectors.toList());
+
+        List<Classroom> availableClassrooms = new ArrayList<>();
+
+        Schedule courseSchedule = parseSchedule(course.getTimeToStart(), course.getDurationInLectureHours());
+        if (courseSchedule == null) {
+            return availableClassrooms; // Empty list if schedule is invalid
+        }
+
+        for (Classroom classroom : suitableClassrooms) {
+            List<Schedule> existingSchedules = Schedules.getOrDefault(classroom.getName(), new ArrayList<>());
+            boolean conflict = existingSchedules.stream().anyMatch(existing -> existing.overlapsWith(courseSchedule));
+            if (!conflict) {
+                availableClassrooms.add(classroom);
+            }
+        }
+
+        return availableClassrooms.stream().distinct().collect(Collectors.toList());
+    }
+
+
+    public void updateCourseClassroom(String courseCode, String newClassroomName) throws SQLException {
+        String updateSQL = "UPDATE Courses SET Classroom = ? WHERE Course = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+            pstmt.setString(1, newClassroomName);
+            pstmt.setString(2, courseCode);
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void updateSchedulesAfterClassroomChange(Course course, String newClassroomName) throws SQLException {
+        // Remove schedule from old classroom
+        String oldClassroom = course.getAssignedClassroom() != null ? course.getAssignedClassroom().getName() : null;
+        if (oldClassroom != null) {
+            Schedule courseSchedule = parseSchedule(course.getTimeToStart(), course.getDurationInLectureHours());
+            if (courseSchedule != null) {
+                List<Schedule> oldSchedules = Schedules.getOrDefault(oldClassroom, new ArrayList<>());
+                oldSchedules.removeIf(existing -> existing.equals(courseSchedule));
+                Schedules.put(oldClassroom, oldSchedules);
+            }
+        }
+
+        // Add schedule to new classroom
+        Schedule newSchedule = parseSchedule(course.getTimeToStart(), course.getDurationInLectureHours());
+        if (newSchedule != null) {
+            List<Schedule> newSchedules = Schedules.getOrDefault(newClassroomName, new ArrayList<>());
+            newSchedules.add(newSchedule);
+            Schedules.put(newClassroomName, newSchedules);
+        }
+
+        // Update the Course object's assigned classroom
+        course.setAssignedClassroom(getClassroomDetails(newClassroomName));
+    }
+
+
+
+
 
 }

@@ -11,7 +11,10 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MainViewController {
 
@@ -71,6 +74,10 @@ public class MainViewController {
     @FXML
     private Label lblAssignedClassroom;
 
+    @FXML
+    private Button btnChangeClassroom;
+
+
     // UI Components - Label for Classroom Details
     @FXML
     private Label lblClassroomCapacity;
@@ -84,6 +91,11 @@ public class MainViewController {
         // Add listeners to list views
         coursesListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> displayCourseDetails(newValue));
         classroomsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> displayClassroomDetails(newValue));
+        coursesListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            boolean isSelected = newValue != null;
+            btnChangeClassroom.setDisable(!isSelected);
+            displayCourseDetails(newValue);
+        });
 
         // Initially disable "Assign Courses" button
         btnAssignCourses.setDisable(true); // Initially disable
@@ -365,6 +377,74 @@ public class MainViewController {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void handleChangeClassroom() {
+        String selectedCourseCode = coursesListView.getSelectionModel().getSelectedItem();
+        if (selectedCourseCode == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a course to change its classroom.");
+            return;
+        }
+
+        try {
+            // Retrieve course details
+            Course course = dbManager.getCourseDetails(selectedCourseCode);
+            if (course == null) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Selected course details could not be retrieved.");
+                return;
+            }
+
+            // Ensure studentCount is correctly set
+            int studentCount = course.getStudentCount();
+            if (studentCount == 0) {
+                showAlert(Alert.AlertType.WARNING, "No Students", "The selected course has no enrolled students.");
+                return;
+            }
+
+            // Fetch available classrooms based on capacity and availability
+            List<Classroom> availableClassrooms = dbManager.getAvailableClassroomsForCourse(course);
+
+            if (availableClassrooms.isEmpty()) {
+                showAlert(Alert.AlertType.INFORMATION, "No Available Classrooms", "There are no available classrooms that meet the capacity and scheduling requirements.");
+                return;
+            }
+
+            // Convert classroom names to a list for the dialog
+            List<String> classroomNames = availableClassrooms.stream()
+                    .map(Classroom::getName)
+                    .collect(Collectors.toList());
+
+            // Show a Choice Dialog to let the user select a new classroom
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(classroomNames.get(0), classroomNames);
+            dialog.setTitle("Change Classroom");
+            dialog.setHeaderText("Change Classroom for Course: " + selectedCourseCode);
+            dialog.setContentText("Select a new classroom:");
+
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(newClassroomName -> {
+                try {
+                    // Update the classroom assignment in the database
+                    dbManager.updateCourseClassroom(selectedCourseCode, newClassroomName);
+
+                    // Update in-memory schedules
+                    dbManager.updateSchedulesAfterClassroomChange(course, newClassroomName);
+
+                    // Refresh UI to reflect changes
+                    displayCourseDetails(selectedCourseCode);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Classroom updated successfully.");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to update classroom assignment.");
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred.");
+        }
+    }
+
+
 
     // Utility method to show alerts
     private void showAlert(Alert.AlertType type, String title, String message) {
