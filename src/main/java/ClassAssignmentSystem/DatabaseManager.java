@@ -361,34 +361,38 @@ public class DatabaseManager {
     public void insertClassroomData(String tableName, String[] columnNames, List<String[]> data) throws SQLException {
         if (data.isEmpty()) return;
 
-        StringBuilder sql = new StringBuilder("INSERT INTO ").append(tableName).append(" (");
-        for (String column : columnNames) {
+        // Ensure 'Classroom' is included in the columns
+        List<String> columnsList = new ArrayList<>(Arrays.asList(columnNames));
+        if (!columnsList.contains("Classroom")) {
+            columnsList.add("Classroom");
+        }
+
+        StringBuilder sql = new StringBuilder("INSERT OR IGNORE INTO ").append(tableName).append(" (");
+        for (String column : columnsList) {
             sql.append("\"").append(column).append("\",");
         }
         sql.deleteCharAt(sql.length() - 1).append(") VALUES (");
-        sql.append("?,".repeat(columnNames.length));
+        sql.append("?,".repeat(columnsList.size()));
         sql.deleteCharAt(sql.length() - 1).append(")");
 
-        // For test and debugging purposes
-        System.out.println("Generated SQL: " + sql);
-
         try (Connection conn = getConnection();
-             PreparedStatement classroomsStmt = conn.prepareStatement(sql.toString())) {
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
 
-            for (String[] row : data) {  // Skip the header row
+            for (String[] row : data) {  // Ensure to skip header row externally if needed
                 if (row.length != columnNames.length) {
                     System.err.println("Warning: Skipping row with mismatched columns.");
                     continue;
                 }
 
                 for (int i = 0; i < columnNames.length; i++) {
-                    classroomsStmt.setString(i + 1, row[i]);
+                    pstmt.setString(i + 1, row[i].trim()); // Trim whitespace
                 }
 
                 try {
-                    classroomsStmt.executeUpdate();
+                    pstmt.executeUpdate();
                 } catch (SQLException e) {
                     System.err.println("Error inserting into Classrooms table: " + e.getMessage());
+                    // Depending on requirements, you might choose to rethrow or handle differently
                 }
             }
         } catch (SQLException e) {
@@ -396,6 +400,7 @@ public class DatabaseManager {
             throw e;
         }
     }
+
 
 
     // Retrieve all courses
@@ -806,9 +811,4 @@ public class DatabaseManager {
         // Update the Course object's assigned classroom
         course.setAssignedClassroom(getClassroomDetails(newClassroomName));
     }
-
-
-
-
-
 }
