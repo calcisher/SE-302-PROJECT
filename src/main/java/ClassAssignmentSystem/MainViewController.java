@@ -6,21 +6,19 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 public class MainViewController {
 
     // File References
     private File coursesCsvFile = null;
     private File classroomsCsvFile = null;
-    private DatabaseManager dbManager = new DatabaseManager("university.db");
-    private VBox studentDetailsPane;
+    private final DatabaseManager dbManager = new DatabaseManager("university.db");
+
     // UI Components - Buttons
     @FXML
     private Button btnSelectCoursesCSV;
@@ -36,9 +34,6 @@ public class MainViewController {
 
     @FXML
     private Button btnDelete;
-
-    @FXML
-    private Button deleteStudent;
 
     @FXML
     private Button btnListCourses;
@@ -97,44 +92,6 @@ public class MainViewController {
             handleImport();
             btnAssignCourses.setDisable(false);
         });
-
-        deleteStudent.setDisable(true); // Initially hidden
-
-        try {
-            // Add double-click listener for the table rows
-            studentsListView.setCellFactory(tv -> {
-                ListCell<String> cell = new ListCell<>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText(null); // Clear text for empty cells
-                        } else {
-                            setText(item); // Set text for non-empty cells
-                        }
-                    }
-                };
-
-                cell.setOnMouseClicked(event -> {
-                    if (event.getClickCount() == 1 && !cell.isEmpty()) {
-                        String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
-                        String courseCode=coursesListView.getSelectionModel().getSelectedItem();
-                        if (selectedStudent != null) {
-                            deleteStudent.setDisable(false); // Show button when a student is selected
-                            deleteStudent.setOnAction(e -> deleteStudentFromCourse(courseCode, selectedStudent));
-                        }
-                    }
-                });
-
-                return cell;
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
-        }
-
-
-
     }
 
     // Handler for selecting Courses CSV file
@@ -267,6 +224,8 @@ public class MainViewController {
         }
     }
 
+
+
     // Display course details and associated students
     private void displayCourseDetails(String courseName) {
         if (courseName != null) {
@@ -297,19 +256,6 @@ public class MainViewController {
                     List<String> students = dbManager.getStudentsForCourse(course.getCode());
                     studentsListView.getItems().clear();
                     studentsListView.getItems().addAll(students);
-                    studentsListView.setOnMouseClicked(event -> {
-                        String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
-                        if (selectedStudent != null) {
-                            // Create the "Delete" button dynamically
-                            deleteStudent = new Button("Delete");
-                            deleteStudent.setOnAction(deleteEvent -> {
-                                deleteStudentFromCourse(course.getCode(), selectedStudent);
-                            });
-                            studentDetailsPane.getChildren().clear();
-                            studentDetailsPane.getChildren().add(deleteStudent);
-                        }
-                    });
-
                 } else {
                     showAlert(Alert.AlertType.WARNING, "No Data", "No details found for the selected course.");
                 }
@@ -319,42 +265,6 @@ public class MainViewController {
             }
         }
     }
-    @FXML
-    private void handleDeleteStudent() {
-        String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
-        String selectedCourseCode=coursesListView.getSelectionModel().getSelectedItem();
-        if (selectedStudent != null) {
-            // Call the delete method and update the UI
-            deleteStudentFromCourse(selectedCourseCode, selectedStudent);
-        }
-    }
-    private void deleteStudentFromCourse(String courseCode, String studentName) {
-        try {
-            // Confirm deletion
-            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmationAlert.setTitle("Confirm Deletion");
-            confirmationAlert.setHeaderText("Are you sure you want to delete the student?");
-            confirmationAlert.setContentText("Student: " + studentName);
-
-            // Handle user response
-            Optional<ButtonType> result = confirmationAlert.showAndWait();
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                // Remove the student from the course in the database
-                boolean success = dbManager.removeStudentFromCourse(courseCode, studentName);
-                if (success) {
-                    // Update the ListView
-                    studentsListView.getItems().remove(studentName);
-                    showAlert(Alert.AlertType.INFORMATION, "Success", "Student removed from the course successfully.");
-                } else {
-                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to remove student from the course.");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while removing the student.");
-        }
-    }
-
 
 
     // Display classroom details
