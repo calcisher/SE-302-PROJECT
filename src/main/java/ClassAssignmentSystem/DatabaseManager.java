@@ -666,5 +666,18 @@ public class DatabaseManager {
             return null;
         }
     }
+    public boolean removeStudentFromCourse(String courseCode,String studentName){
+        try (Connection conn=getConnection()) {
+            String query = "DELETE FROM Courses WHERE Course = ? AND Students = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, courseCode);
+                stmt.setString(2, studentName);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }
