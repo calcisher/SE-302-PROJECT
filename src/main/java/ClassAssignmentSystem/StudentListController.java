@@ -78,9 +78,9 @@ public class StudentListController {
         }
     }
 
-    private void openStudentSchedule(String studentName) {
+    public static void openStudentSchedule(String studentName) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("scheduleUI.fxml"));
+            FXMLLoader loader = new FXMLLoader(StudentListController.class.getResource("scheduleUI.fxml"));
             Parent root = loader.load();
 
             ScheduleController controller = loader.getController();

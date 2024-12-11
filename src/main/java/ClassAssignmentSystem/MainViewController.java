@@ -264,9 +264,7 @@ public class MainViewController {
         }
     }
 
-
-
-
+    
     // Display course details and associated students
     private void displayCourseDetails(String courseName) {
         if (courseName != null) {
@@ -293,10 +291,38 @@ public class MainViewController {
                         lblAssignedClassroom.setTooltip(new Tooltip("No classroom assigned."));
                     }
 
-                    // Populate students list
-                    List<String> students = dbManager.getStudentsForCourse(course.getCode());
-                    studentsListView.getItems().clear();
-                    studentsListView.getItems().addAll(students);
+                    try {
+                        List<String> students = dbManager.getStudentsForCourse(course.getCode());
+                        studentsListView.getItems().clear();
+                        studentsListView.getItems().addAll(students);
+
+                        // Add double-click listener for the table rows
+                        studentsListView.setCellFactory(tv -> {
+                            ListCell<String> cell = new ListCell<>() {
+                                @Override
+                                protected void updateItem(String item, boolean empty) {
+                                    super.updateItem(item, empty);
+                                    if (empty || item == null) {
+                                        setText(null); // Clear text for empty cells
+                                    } else {
+                                        setText(item); // Set text for non-empty cells
+                                    }
+                                }
+                            };
+
+                            cell.setOnMouseClicked(event -> {
+                                if (event.getClickCount() == 2 && !cell.isEmpty()) {
+                                    String selectedStudent = cell.getItem();
+                                    StudentListController.openStudentSchedule(selectedStudent);
+                                }
+                            });
+
+                            return cell;
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
+                    }
                 } else {
                     showAlert(Alert.AlertType.WARNING, "No Data", "No details found for the selected course.");
                 }
