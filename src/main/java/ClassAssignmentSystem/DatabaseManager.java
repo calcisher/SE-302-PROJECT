@@ -1,5 +1,7 @@
 package ClassAssignmentSystem;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,6 +9,7 @@ import java.sql.*;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +36,105 @@ public class DatabaseManager {
         }
     }
 
+    public static ObservableList<StudentScheduleController.ScheduleEntry> getStudentSchedule(String studentName) {
+        ObservableList<StudentScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
+
+        String query = "SELECT TimeToStart, Course, Classroom, DurationInLectureHours FROM Courses WHERE Students = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, studentName);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            Map<String, Map<LocalTime, String>> weeklySchedule = new HashMap<>();
+
+            String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+
+            for (String day : days) {
+                weeklySchedule.put(day, new TreeMap<>());
+            }
+
+            while (resultSet.next()) {
+                String timeToStart = resultSet.getString("TimeToStart");
+                String course = resultSet.getString("Course");
+                String classroom = resultSet.getString("Classroom");
+                int duration = resultSet.getInt("DurationInLectureHours");
+
+
+                String[] parts = timeToStart.split(" ");
+                if (parts.length == 2) {
+                    String day = parts[0];
+                    String time = parts[1];
+
+                    try {
+                        LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
+
+                        String courseAndClassroom = course + " (" + classroom + ")";
+
+                        if (weeklySchedule.containsKey(day)) {
+                            for (int i = 0; i < duration; i++) {
+                                LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                weeklySchedule.get(day).put(slotTime, courseAndClassroom);
+                            }
+                        }
+                    } catch (DateTimeParseException e) {
+                        System.err.println("Geçersiz zaman formatı: " + time);
+                    }
+                }
+            }
+
+            LocalTime currentTime = LocalTime.of(8, 30); // 08:30 start time
+            LocalTime endTime = LocalTime.of(22, 15); // 22:15 end time
+
+            while (!currentTime.isAfter(endTime)) {
+                String time = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
+
+                String monday = weeklySchedule.get("Monday").getOrDefault(currentTime, "");
+                String tuesday = weeklySchedule.get("Tuesday").getOrDefault(currentTime, "");
+                String wednesday = weeklySchedule.get("Wednesday").getOrDefault(currentTime, "");
+                String thursday = weeklySchedule.get("Thursday").getOrDefault(currentTime, "");
+                String friday = weeklySchedule.get("Friday").getOrDefault(currentTime, "");
+
+                scheduleData.add(new StudentScheduleController.ScheduleEntry(
+                        time,
+                        monday,
+                        tuesday,
+                        wednesday,
+                        thursday,
+                        friday
+                ));
+
+                currentTime = currentTime.plusMinutes(55);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return scheduleData;
+    }
+
+    
+
+    public static ObservableList<String> getDistinctStudentNames() {
+        ObservableList<String> studentNames = FXCollections.observableArrayList();
+        String query = "SELECT DISTINCT Students FROM Courses";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                studentNames.add(resultSet.getString("Students"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return studentNames;
+    }
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + databasePath);

@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.StudentScheduleController">
-    <TableView fx:id="scheduleTable" VBox.vgrow="ALWAYS">
+    <Label text="Student Schedule" />
+    <TableView fx:id="scheduleTable">
         <columns>
             <TableColumn fx:id="timeColumn" text="Time" />
-            <TableColumn fx:id="mondayColumn" text="Monday" />
-            <TableColumn fx:id="tuesdayColumn" text="Tuesday" />
-            <TableColumn fx:id="wednesdayColumn" text="Wednesday" />
-            <TableColumn fx:id="thursdayColumn" text="Thursday" />
-            <TableColumn fx:id="fridayColumn" text="Friday" />
+         <TableColumn fx:id="mondayColumn" text="Monday" />
+         <TableColumn fx:id="tuesdayColumn" text="Tuesday" />
+         <TableColumn fx:id="wednesdayColumn" text="Wednesday" />
+         <TableColumn fx:id="thursdayColumn" text="Thursday" />
+         <TableColumn fx:id="fridayColumn" text="Friday" />
         </columns>
     </TableView>
 </VBox>

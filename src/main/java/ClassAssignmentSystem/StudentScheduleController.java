@@ -1,18 +1,13 @@
 package ClassAssignmentSystem;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.scene.Scene;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class StudentScheduleController {
-
     @FXML
     private TableView<ScheduleEntry> scheduleTable;
     @FXML
@@ -36,22 +31,12 @@ public class StudentScheduleController {
         wednesdayColumn.setCellValueFactory(new PropertyValueFactory<>("wednesday"));
         thursdayColumn.setCellValueFactory(new PropertyValueFactory<>("thursday"));
         fridayColumn.setCellValueFactory(new PropertyValueFactory<>("friday"));
-
-        ObservableList<ScheduleEntry> scheduleData = FXCollections.observableArrayList(
-                new ScheduleEntry("08:00 - 09:00", "SE115\nC201", "", "MATH240\nC301", "", "FENG101\nM206"),
-                new ScheduleEntry("09:00 - 10:00", "", "SE302\nC202", "", "CE215\nM101", ""),
-                new ScheduleEntry("10:00 - 11:00", "PHYS100\nML103", "", "CHEM100\nML104", "SE307\nC203", ""),
-                new ScheduleEntry("11:00 - 12:00", "CE221\nM102", "MATH153\nML105", "", "", "SE350\nC204"),
-                new ScheduleEntry("12:00 - 13:00", "", "", "", "", ""),
-                new ScheduleEntry("13:00 - 14:00", "SE360\nC205", "", "", "SE380\nC206", ""),
-                new ScheduleEntry("14:00 - 15:00", "", "CE323\nM201", "MATH250\nM01", "", "SE431\nC208"),
-                new ScheduleEntry("15:00 - 16:00", "SE420\nC207", "", "", "CE342\nM202", ""),
-                new ScheduleEntry("16:00 - 17:00", "", "FENG345\nML102", "", "CE345\nM203", "")
-        );
-
-        scheduleTable.setItems(scheduleData);
     }
 
+    public void loadStudentSchedule(String studentName) {
+        ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getStudentSchedule(studentName);
+        scheduleTable.setItems(scheduleData);
+    }
 
     public static class ScheduleEntry {
         private String time;

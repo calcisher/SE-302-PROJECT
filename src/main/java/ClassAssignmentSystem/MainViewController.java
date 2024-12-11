@@ -1,6 +1,10 @@
 package ClassAssignmentSystem;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -37,6 +41,8 @@ public class MainViewController {
     @FXML
     private Button btnListClassrooms;
 
+    @FXML
+    private Button btnListStudents;
 
     // UI Components - ListViews
     @FXML
@@ -275,6 +281,21 @@ public class MainViewController {
                 e.printStackTrace();
                 showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classroom details.");
             }
+        }
+    }
+
+    @FXML
+    private void handleListStudents(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Student List");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
