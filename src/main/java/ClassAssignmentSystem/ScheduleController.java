@@ -4,10 +4,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class StudentScheduleController {
+import java.util.List;
+
+public class ScheduleController {
     @FXML
     private TableView<ScheduleEntry> scheduleTable;
     @FXML
@@ -37,6 +38,15 @@ public class StudentScheduleController {
         ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getStudentSchedule(studentName);
         scheduleTable.setItems(scheduleData);
     }
+    public void loadCourseSchedule(String className) {
+        ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getClassSchedule(className);
+        scheduleTable.setItems(scheduleData);
+    }
+    public void loadFreeTimeSchedule(List<Student> students) {
+        ObservableList<ScheduleEntry> scheduleData = DatabaseManager.getFreeTimeSchedule(students);
+        scheduleTable.setItems(scheduleData);
+    }
+
 
     public static class ScheduleEntry {
         private String time;
