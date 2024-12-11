@@ -80,10 +80,10 @@ public class StudentListController {
 
     private void openStudentSchedule(String studentName) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("studentScheduleUI.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("scheduleUI.fxml"));
             Parent root = loader.load();
 
-            StudentScheduleController controller = loader.getController();
+            ScheduleController controller = loader.getController();
             controller.loadStudentSchedule(studentName);
 
             Stage stage = new Stage();

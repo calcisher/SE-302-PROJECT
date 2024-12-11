@@ -36,8 +36,8 @@ public class DatabaseManager {
         }
     }
 
-    public static ObservableList<StudentScheduleController.ScheduleEntry> getStudentSchedule(String studentName) {
-        ObservableList<StudentScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
+    public static ObservableList<ScheduleController.ScheduleEntry> getStudentSchedule(String studentName) {
+        ObservableList<ScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
 
         String query = "SELECT TimeToStart, Course, Classroom, DurationInLectureHours FROM Courses WHERE Students = ?";
 
@@ -79,7 +79,7 @@ public class DatabaseManager {
                             }
                         }
                     } catch (DateTimeParseException e) {
-                        System.err.println("Geçersiz zaman formatı: " + time);
+                        System.err.println("Invalıd Time For: " + time);
                     }
                 }
             }
@@ -96,7 +96,84 @@ public class DatabaseManager {
                 String thursday = weeklySchedule.get("Thursday").getOrDefault(currentTime, "");
                 String friday = weeklySchedule.get("Friday").getOrDefault(currentTime, "");
 
-                scheduleData.add(new StudentScheduleController.ScheduleEntry(
+                scheduleData.add(new ScheduleController.ScheduleEntry(
+                        time,
+                        monday,
+                        tuesday,
+                        wednesday,
+                        thursday,
+                        friday
+                ));
+
+                currentTime = currentTime.plusMinutes(55);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return scheduleData;
+    }
+
+
+    public static ObservableList<ScheduleController.ScheduleEntry> getClassSchedule(String className) {
+        ObservableList<ScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
+
+        String query = "SELECT TimeToStart, Course, Classroom, DurationInLectureHours FROM Courses WHERE Classroom = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, className);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            Map<String, Map<LocalTime, String>> weeklySchedule = new HashMap<>();
+
+            String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+
+            for (String day : days) {
+                weeklySchedule.put(day, new TreeMap<>());
+            }
+
+            while (resultSet.next()) {
+                String timeToStart = resultSet.getString("TimeToStart");
+                String course = resultSet.getString("Course");
+                int duration = resultSet.getInt("DurationInLectureHours");
+
+
+                String[] parts = timeToStart.split(" ");
+                if (parts.length == 2) {
+                    String day = parts[0];
+                    String time = parts[1];
+
+                    try {
+                        LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
+
+                        if (weeklySchedule.containsKey(day)) {
+                            for (int i = 0; i < duration; i++) {
+                                LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                weeklySchedule.get(day).put(slotTime, course);
+                            }
+                        }
+                    } catch (DateTimeParseException e) {
+                        System.err.println("Invalid Time For" + time);
+                    }
+                }
+            }
+
+            LocalTime currentTime = LocalTime.of(8, 30); // 08:30 start time
+            LocalTime endTime = LocalTime.of(22, 15); // 22:15 end time
+
+            while (!currentTime.isAfter(endTime)) {
+                String time = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
+
+                String monday = weeklySchedule.get("Monday").getOrDefault(currentTime, "");
+                String tuesday = weeklySchedule.get("Tuesday").getOrDefault(currentTime, "");
+                String wednesday = weeklySchedule.get("Wednesday").getOrDefault(currentTime, "");
+                String thursday = weeklySchedule.get("Thursday").getOrDefault(currentTime, "");
+                String friday = weeklySchedule.get("Friday").getOrDefault(currentTime, "");
+
+                scheduleData.add(new ScheduleController.ScheduleEntry(
                         time,
                         monday,
                         tuesday,

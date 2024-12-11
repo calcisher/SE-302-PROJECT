@@ -10,6 +10,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class MainViewController {
@@ -196,7 +197,22 @@ public class MainViewController {
         }
     }
 
+    private void openCourseSchedule(String className) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("scheduleUI.fxml"));
+            Parent root = loader.load();
 
+            ScheduleController controller = loader.getController();
+            controller.loadCourseSchedule(className);
+
+            Stage stage = new Stage();
+            stage.setTitle("Schedule for class: " + className);
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     // Handler for List Courses button
     @FXML
@@ -209,20 +225,45 @@ public class MainViewController {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve courses.");
         }
+
     }
 
-    // Handler for List Classrooms button
     @FXML
     private void handleListClassrooms() {
         try {
             List<String> classrooms = dbManager.getAllClassrooms();
             classroomsListView.getItems().clear();
             classroomsListView.getItems().addAll(classrooms);
+
+            // Add double-click listener for the table rows
+            classroomsListView.setCellFactory(tv -> {
+                ListCell<String> cell = new ListCell<>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null); // Clear text for empty cells
+                        } else {
+                            setText(item); // Set text for non-empty cells
+                        }
+                    }
+                };
+
+                cell.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2 && !cell.isEmpty()) {
+                        String selectedCourse = cell.getItem();
+                        openCourseSchedule(selectedCourse);
+                    }
+                });
+
+                return cell;
+            });
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
         }
     }
+
 
 
 
