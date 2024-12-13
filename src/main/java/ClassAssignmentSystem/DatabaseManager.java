@@ -849,7 +849,24 @@ public class DatabaseManager {
         return null; // No available classrooms
     }
 
-    
+    public void insertNewCourse(String courseID, String timeToStart, int duration, String lecturer, List<Student> students, Classroom classroom) throws SQLException {
+        String insertCourseSQL = "INSERT INTO Courses (Course, TimeToStart, DurationInLectureHours, Lecturer, Students, Classroom) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(insertCourseSQL)) {
+
+            for (Student student : students) {
+                pstmt.setString(1, courseID);
+                pstmt.setString(2, timeToStart);
+                pstmt.setInt(3, duration);
+                pstmt.setString(4, lecturer);
+                pstmt.setString(5, student.getName());
+                pstmt.setString(6, classroom.getName());
+                pstmt.executeUpdate();
+            }
+        }
+    }
+
 
 
 }
