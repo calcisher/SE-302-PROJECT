@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Label?>
+
+
+<GridPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.CreateCourseController"
+          alignment="CENTER" hgap="10" vgap="10">
+    <Label text="Course ID:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+    <TextField fx:id="txtCourseID" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+    <Label text="Lecturer:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+    <TextField fx:id="txtLecturer" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+    <Button text="Assign Students" onAction="#handleAssignStudents" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+    <Label text="Day:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+    <TextField fx:id="txtDay" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+    <Label text="Start Hour:" GridPane.rowIndex="3" GridPane.columnIndex="2" />
+    <TextField fx:id="txtStartHour" GridPane.rowIndex="3" GridPane.columnIndex="3" />
+
+    <Label text="Duration:" GridPane.rowIndex="3" GridPane.columnIndex="4" />
+    <TextField fx:id="txtDuration" GridPane.rowIndex="3" GridPane.columnIndex="5" />
+
+    <Button text="Assign Class" onAction="#handleAssignClass" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+    <Button text="Done" onAction="#handleDone" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+</GridPane>
+
