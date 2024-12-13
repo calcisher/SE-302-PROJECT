@@ -12,6 +12,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
 import java.util.List;
 
 public class StudentListController {
@@ -113,5 +115,23 @@ public class StudentListController {
             e.printStackTrace();
         }
     }
+
+    private boolean selectionMode = false;
+
+    public void setSelectionMode(boolean enable) {
+        selectionMode = enable;
+        selectColumn.setVisible(enable);
+    }
+
+    public List<Student> getSelectedStudents() {
+        List<Student> selected = new ArrayList<>();
+        for (Student student : studentList) {
+            if (student.getSelectBox().isSelected()) {
+                selected.add(student);
+            }
+        }
+        return selected;
+    }
+
 
 }
