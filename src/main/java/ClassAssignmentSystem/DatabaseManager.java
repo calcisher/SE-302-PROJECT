@@ -192,26 +192,31 @@ public class DatabaseManager {
         return scheduleData;
     }
 
-    public static ObservableList<ScheduleController.ScheduleEntry> getFreeTimeSchedule(List<Student> students) {
+
+
+    public static ObservableList<ScheduleController.ScheduleEntry> getFreeTimeSchedule(List<Student> selectedStudents) {
         ObservableList<ScheduleController.ScheduleEntry> scheduleData = FXCollections.observableArrayList();
 
         try (Connection connection = getConnection()) {
-            Map<String, Map<LocalTime, Boolean>> freeTimeSlots = new HashMap<>();
+            // Initialize a map to track common free time slots for all selected students
+            Map<String, Map<LocalTime, Boolean>> commonFreeTimeSlots = new HashMap<>();
             String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
 
+            // Initialize the schedule with all time slots marked as free
             for (String day : days) {
                 Map<LocalTime, Boolean> dailySchedule = new TreeMap<>();
-                LocalTime currentTime = LocalTime.of(8, 30);
-                LocalTime endTime = LocalTime.of(22, 15);
+                LocalTime currentTime = LocalTime.of(8, 30); // Start time
+                LocalTime endTime = LocalTime.of(22, 15);    // End time
 
                 while (!currentTime.isAfter(endTime)) {
-                    dailySchedule.put(currentTime, true);
-                    currentTime = currentTime.plusMinutes(55);
+                    dailySchedule.put(currentTime, true); // All slots are free initially
+                    currentTime = currentTime.plusMinutes(55); // Slot interval
                 }
-                freeTimeSlots.put(day, dailySchedule);
+                commonFreeTimeSlots.put(day, dailySchedule);
             }
 
-            for (Student student : students) {
+            // Process each student's schedule to mark busy time slots
+            for (Student student : selectedStudents) {
                 String query = "SELECT TimeToStart, DurationInLectureHours FROM Courses WHERE Students = ?";
                 try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
                     preparedStatement.setString(1, student.getName());
@@ -227,34 +232,32 @@ public class DatabaseManager {
 
                             try {
                                 LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
-
-                                if (freeTimeSlots.containsKey(day)) {
+                                if (commonFreeTimeSlots.containsKey(day)) {
                                     for (int i = 0; i < duration; i++) {
                                         LocalTime slotTime = startTime.plusMinutes(i * 55);
-                                        if (freeTimeSlots.get(day).containsKey(slotTime)) {
-                                            freeTimeSlots.get(day).put(slotTime, false); // Dolu zaman dilimi
-                                        }
+                                        commonFreeTimeSlots.get(day).put(slotTime, false); // Mark as busy
                                     }
                                 }
                             } catch (DateTimeParseException e) {
-                                System.err.println("Invalid Time Format: " + time);
+                                System.err.println("Invalid time format: " + time);
                             }
                         }
                     }
                 }
             }
 
+            // Generate the final schedule with common free slots
             LocalTime currentTime = LocalTime.of(8, 30);
             LocalTime endTime = LocalTime.of(22, 15);
 
             while (!currentTime.isAfter(endTime)) {
                 String time = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
 
-                String monday = isSlotFree(freeTimeSlots.get("Monday"), currentTime) ? "Free" : "";
-                String tuesday = isSlotFree(freeTimeSlots.get("Tuesday"), currentTime) ? "Free" : "";
-                String wednesday = isSlotFree(freeTimeSlots.get("Wednesday"), currentTime) ? "Free" : "";
-                String thursday = isSlotFree(freeTimeSlots.get("Thursday"), currentTime) ? "Free" : "";
-                String friday = isSlotFree(freeTimeSlots.get("Friday"), currentTime) ? "Free" : "";
+                String monday = isSlotFree(commonFreeTimeSlots.get("Monday"), currentTime) ? "Free" : "";
+                String tuesday = isSlotFree(commonFreeTimeSlots.get("Tuesday"), currentTime) ? "Free" : "";
+                String wednesday = isSlotFree(commonFreeTimeSlots.get("Wednesday"), currentTime) ? "Free" : "";
+                String thursday = isSlotFree(commonFreeTimeSlots.get("Thursday"), currentTime) ? "Free" : "";
+                String friday = isSlotFree(commonFreeTimeSlots.get("Friday"), currentTime) ? "Free" : "";
 
                 scheduleData.add(new ScheduleController.ScheduleEntry(
                         time,

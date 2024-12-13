@@ -77,7 +77,7 @@ public class StudentListController {
                 selectedStudents.add(student);
             }
         }
-        openFreeTimeSlots(studentList);
+        openFreeTimeSlots(selectedStudents); // previously "studentList", program selected all students list not only selected ones
     }
 
     public static void openStudentSchedule(String studentName) {
