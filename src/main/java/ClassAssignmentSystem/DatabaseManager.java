@@ -833,4 +833,23 @@ public class DatabaseManager {
         }
     }
 
+    public Classroom findAvailableClass(String day, String startHour, int duration) throws SQLException {
+        List<Classroom> classrooms = getAllClassroomsWithCapacity();
+
+        for (Classroom classroom : classrooms) {
+            List<Schedule> schedules = Schedules.getOrDefault(classroom.getName(), new ArrayList<>());
+
+            Schedule newSchedule = parseSchedule(day + " " + startHour, duration);
+            boolean conflict = schedules.stream().anyMatch(schedule -> schedule.overlapsWith(newSchedule));
+
+            if (!conflict) {
+                return classroom;
+            }
+        }
+        return null; // No available classrooms
+    }
+
+    
+
+
 }
