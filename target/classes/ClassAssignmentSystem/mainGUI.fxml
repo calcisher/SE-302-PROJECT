@@ -40,6 +40,7 @@
         <Button fx:id="btnListClassrooms" onAction="#handleListClassrooms" text="List Classrooms" />
       <Button fx:id="btnListStudents" onAction="#handleListStudents" text="List Students" />
         <Button fx:id="btnAssignCourses" disable="true" onAction="#handleAssignCourses" text="Assign Courses" />
+        <Button fx:id="btnCreateCourse" text="Create Course/Meeting" />
     </HBox>
 
     <!-- Main Display Section -->
