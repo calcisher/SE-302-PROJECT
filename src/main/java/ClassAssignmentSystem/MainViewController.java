@@ -374,4 +374,23 @@ public class MainViewController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+//for Create course button
+    @FXML
+    private void handleCreateCourse() {
+        try {
+            // Load the Create Course UI
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("createCourseUI.fxml"));
+            Parent root = loader.load();
+
+            // Create a new stage for the Create Course window
+            Stage stage = new Stage();
+            stage.setTitle("Create Course/Meeting");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
