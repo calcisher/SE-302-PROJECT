@@ -367,32 +367,61 @@ public class DatabaseManager {
             columnsList.add("Classroom");
         }
 
-        StringBuilder sql = new StringBuilder("INSERT OR IGNORE INTO ").append(tableName).append(" (");
+        StringBuilder insertSql = new StringBuilder("INSERT INTO ").append(tableName).append(" (");
         for (String column : columnsList) {
-            sql.append("\"").append(column).append("\",");
+            insertSql.append("\"").append(column).append("\",");
         }
-        sql.deleteCharAt(sql.length() - 1).append(") VALUES (");
-        sql.append("?,".repeat(columnsList.size()));
-        sql.deleteCharAt(sql.length() - 1).append(")");
+        insertSql.deleteCharAt(insertSql.length() - 1).append(") VALUES (");
+        insertSql.append("?,".repeat(columnsList.size()));
+        insertSql.deleteCharAt(insertSql.length() - 1).append(")");
+
+        // Define the check existence SQL
+        // Adjust the WHERE clause based on unique identifiers for your Classroom table
+        StringBuilder checkExistSql = new StringBuilder("SELECT COUNT(*) FROM ").append(tableName).append(" WHERE Classroom = ?");
+
+        // For test and debugging purposes
+        System.out.println("Generated Insert SQL: " + insertSql);
+        System.out.println("Generated CheckExist SQL: " + checkExistSql);
 
         try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+             PreparedStatement insertStmt = conn.prepareStatement(insertSql.toString());
+             PreparedStatement checkExistStmt = conn.prepareStatement(checkExistSql.toString())) {
 
-            for (String[] row : data) {  // Ensure to skip header row externally if needed
+            for (String[] row : data) {
+                // Ensure the row has the expected number of columns
                 if (row.length != columnNames.length) {
                     System.err.println("Warning: Skipping row with mismatched columns.");
                     continue;
                 }
 
-                for (int i = 0; i < columnNames.length; i++) {
-                    pstmt.setString(i + 1, row[i].trim()); // Trim whitespace
+                String classroomValue = row[getColumnIndex(columnNames, "Classroom")].trim();
+                if (classroomValue.isEmpty()) {
+                    System.err.println("Warning: Skipping row with empty Classroom value.");
+                    continue;
                 }
 
-                try {
-                    pstmt.executeUpdate();
-                } catch (SQLException e) {
-                    System.err.println("Error inserting into Classrooms table: " + e.getMessage());
-                    // Depending on requirements, you might choose to rethrow or handle differently
+                // Check if the classroom already exists
+                checkExistStmt.setString(1, classroomValue);
+                ResultSet rs = checkExistStmt.executeQuery();
+                rs.next();
+                int count = rs.getInt(1);
+                rs.close();
+
+                if (count == 0) {
+                    // If the entry doesn't exist, insert the new data
+                    for (int i = 0; i < columnNames.length; i++) {
+                        insertStmt.setString(i + 1, row[i].trim());
+                    }
+
+                    try {
+                        insertStmt.executeUpdate();
+                        System.out.println("Inserted Classroom: " + classroomValue);
+                    } catch (SQLException e) {
+                        System.err.println("Error inserting into Classrooms table: " + e.getMessage());
+                    }
+                } else {
+                    // For testing
+                    System.out.println("Skipping duplicate Classroom entry: " + classroomValue);
                 }
             }
         } catch (SQLException e) {
@@ -400,6 +429,19 @@ public class DatabaseManager {
             throw e;
         }
     }
+
+    /**
+     * Helper method to find the index of a column name in the columnNames array.
+     */
+    private int getColumnIndex(String[] columnNames, String columnName) {
+        for (int i = 0; i < columnNames.length; i++) {
+            if (columnNames[i].equalsIgnoreCase(columnName)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Column " + columnName + " not found in columnNames array.");
+    }
+
 
 
 
