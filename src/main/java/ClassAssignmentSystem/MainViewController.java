@@ -21,9 +21,15 @@ public class MainViewController {
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
 
+
+    // UI Components - Buttons
+
+    @FXML
+    private Button btnAddStudent;
+
     @FXML
     private Button btnDeleteStudent;
-    // UI Components - Buttons
+
     @FXML
     private Button btnSelectCoursesCSV;
 
@@ -170,18 +176,18 @@ public class MainViewController {
     // Handler for Import button
     @FXML
     private void handleImport() {
-            try {
-                CSVImporter.importClassroomData(classroomsCsvFile,dbManager);
-                CSVImporter.importCourseData(coursesCsvFile,dbManager);
-                dbManager.addClassroomColumnIfMissing();
-                showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
-                btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
-                btnDelete.setDisable(false); //Enable delete data button after import
+        try {
+            CSVImporter.importClassroomData(classroomsCsvFile, dbManager);
+            CSVImporter.importCourseData(coursesCsvFile, dbManager);
+            dbManager.addClassroomColumnIfMissing();
+            showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
+            btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
+            btnDelete.setDisable(false); //Enable delete data button after import
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
+        }
     }
 
     // Handler for Delete button
@@ -262,8 +268,6 @@ public class MainViewController {
             });
 
 
-
-
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
@@ -317,7 +321,7 @@ public class MainViewController {
                             };
 
                             cell.setOnMouseClicked(event -> {
-                                if (event.getClickCount() == 1  && !cell.isEmpty()){
+                                if (event.getClickCount() == 1 && !cell.isEmpty()) {
                                     btnDeleteStudent.setDisable(false);
                                 }
                                 if (event.getClickCount() == 2 && !cell.isEmpty()) {
@@ -366,6 +370,10 @@ public class MainViewController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
             Parent root = loader.load();
 
+            // Retrieve the controller and call ListAllStudentsFromDatabase
+            StudentListController controller = loader.getController();
+            controller.listAllStudentsFromDatabase();
+
             Stage stage = new Stage();
             stage.setTitle("Student List");
             stage.setScene(new Scene(root));
@@ -383,13 +391,61 @@ public class MainViewController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
     @FXML
     private void handleDeleteStudent() {
         String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
-        String selectedCourseCode=coursesListView.getSelectionModel().getSelectedItem();
+        String selectedCourseCode = coursesListView.getSelectionModel().getSelectedItem();
         if (selectedStudent != null) {
             // Call the delete method and update the UI
             deleteStudentFromCourse(selectedCourseCode, selectedStudent);
+        }
+    }
+
+    @FXML
+    private void handleAddStudent() {
+        try {
+            // Get the selected course
+            String selectedCourse = coursesListView.getSelectionModel().getSelectedItem();
+
+            if (selectedCourse == null) {
+                showAlert(Alert.AlertType.WARNING, "No Course Selected", "Please select a course before adding students.");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
+            Parent root = loader.load();
+
+            // Retrieve the controller and pass the selected course
+            StudentListController controller = loader.getController();
+            controller.btnAddSetAvailable();
+            controller.getListViewsAndDBManager(coursesListView,studentsListView,dbManager);
+
+            // Fetch course capacity and current student count
+            int courseCapacity = dbManager.getCourseCapacity(selectedCourse);
+            int currentStudentCount = dbManager.getCourseStudentCount(selectedCourse);
+
+            // Calculate remaining capacity and pass it to the controller
+            int remainingCapacity = courseCapacity - currentStudentCount;
+
+            //For Test.
+            System.out.println("Course: " + selectedCourse);
+            System.out.println("Capacity: " + courseCapacity);
+            System.out.println("Current Student Count: " + currentStudentCount);
+
+            if (remainingCapacity <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Course Full", "The selected course is already full.");
+                return;
+            }
+
+            controller.listMissingStudents(selectedCourse, remainingCapacity);
+
+            Stage stage = new Stage();
+            stage.setTitle("Student List");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -420,4 +476,30 @@ public class MainViewController {
         }
     }
 
+    public void addStudentToCourse(String courseCode, String studentName) {
+        try {
+            // Confirm addition
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Addition");
+            confirmationAlert.setHeaderText("Are you sure you want to add the student?");
+            confirmationAlert.setContentText("Student: " + studentName);
+
+            // Handle user response
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Add the student to the course in the database
+                boolean success = dbManager.addStudentToCourse(courseCode, studentName);
+                if (success) {
+                    // Update the ListView
+                    studentsListView.getItems().add(studentName);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Student added to the course successfully.");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to add student to the course.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding the student.");
+        }
+    }
 }

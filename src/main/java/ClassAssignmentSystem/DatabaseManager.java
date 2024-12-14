@@ -516,11 +516,6 @@ public class DatabaseManager {
     }
 
     // Assign courses to classrooms (simple assignment for demonstration)
-    /**
-     * Assigns courses to classrooms based on capacity and time availability.
-     * @return true if all courses are assigned successfully, false otherwise.
-     * @throws SQLException
-     */
     public boolean assignCoursesToClassrooms() throws SQLException {
         // Step 1: Retrieve all distinct courses with their student counts
         Map<String, Integer> courseStudentCounts = getCourseStudentCounts();
@@ -841,5 +836,73 @@ public class DatabaseManager {
             return false;
         }
     }
+
+    public boolean addStudentToCourse(String courseCode, String studentName) {
+        try (Connection conn = getConnection()) {
+            String query = "INSERT INTO Courses (Course, Students) VALUES (?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, courseCode);
+                stmt.setString(2, studentName);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static ObservableList<String> getStudentsNotInCourse(String courseCode) {
+        ObservableList<String> studentNames = FXCollections.observableArrayList();
+        String query = "SELECT DISTINCT Students FROM Courses WHERE Students NOT IN (SELECT Students FROM Courses WHERE Course = ?)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    studentNames.add(resultSet.getString("Students"));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return studentNames;
+    }
+
+    public int getCourseCapacity(String courseCode) {
+        String query = "SELECT class.Capacity FROM Classrooms class, Courses course WHERE class.Classroom = course.Classroom AND course.Course = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("Capacity");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Default to 0 if no data found
+    }
+
+    public int getCourseStudentCount(String courseCode) {
+        String query = "SELECT COUNT(*) AS StudentCount FROM Courses WHERE Course = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("StudentCount");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Default to 0 if no data found
+    }
+
 
 }
