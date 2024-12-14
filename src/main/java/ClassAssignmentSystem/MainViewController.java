@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public class MainViewController {
 
@@ -20,6 +21,8 @@ public class MainViewController {
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
 
+    @FXML
+    private Button btnDeleteStudent;
     // UI Components - Buttons
     @FXML
     private Button btnSelectCoursesCSV;
@@ -125,8 +128,6 @@ public class MainViewController {
             showAlert(Alert.AlertType.ERROR, "Error", "An error occurred during assignment.");
         }
     }
-
-
 
 
     // Handler for Assign Courses button
@@ -250,6 +251,7 @@ public class MainViewController {
                 };
 
                 cell.setOnMouseClicked(event -> {
+                    btnDeleteStudent.setDisable(false);
                     if (event.getClickCount() == 2 && !cell.isEmpty()) {
                         String selectedCourse = cell.getItem();
                         openCourseSchedule(selectedCourse);
@@ -258,6 +260,10 @@ public class MainViewController {
 
                 return cell;
             });
+
+
+
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
@@ -311,6 +317,9 @@ public class MainViewController {
                             };
 
                             cell.setOnMouseClicked(event -> {
+                                if (event.getClickCount() == 1  && !cell.isEmpty()){
+                                    btnDeleteStudent.setDisable(false);
+                                }
                                 if (event.getClickCount() == 2 && !cell.isEmpty()) {
                                     String selectedStudent = cell.getItem();
                                     StudentListController.openStudentSchedule(selectedStudent);
@@ -374,4 +383,41 @@ public class MainViewController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+    @FXML
+    private void handleDeleteStudent() {
+        String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
+        String selectedCourseCode=coursesListView.getSelectionModel().getSelectedItem();
+        if (selectedStudent != null) {
+            // Call the delete method and update the UI
+            deleteStudentFromCourse(selectedCourseCode, selectedStudent);
+        }
+    }
+
+    private void deleteStudentFromCourse(String courseCode, String studentName) {
+        try {
+            // Confirm deletion
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Deletion");
+            confirmationAlert.setHeaderText("Are you sure you want to delete the student?");
+            confirmationAlert.setContentText("Student: " + studentName);
+
+            // Handle user response
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Remove the student from the course in the database
+                boolean success = dbManager.removeStudentFromCourse(courseCode, studentName);
+                if (success) {
+                    // Update the ListView
+                    studentsListView.getItems().remove(studentName);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Student removed from the course successfully.");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to remove student from the course.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while removing the student.");
+        }
+    }
+
 }

@@ -85,6 +85,7 @@
                 </padding>
                 <Label text="Students:" />
                 <ListView fx:id="studentsListView" prefHeight="333.0" prefWidth="278.0" />
+                <Button fx:id="btnDeleteStudent" text="Delete Selected Student" disable="true" onAction="#handleDeleteStudent" />
             </VBox>
         </HBox>
 

@@ -594,7 +594,6 @@ public class DatabaseManager {
         return allAssigned;
     }
 
-
     private Map<String, Integer> getCourseStudentCounts() throws SQLException {
         Map<String, Integer> courseCounts = new HashMap<>();
         String query = "SELECT Course, COUNT(Students) as StudentCount FROM Courses GROUP BY Course";
@@ -827,6 +826,19 @@ public class DatabaseManager {
         } catch (Exception e) {
             System.err.println("Error parsing course schedule: " + e.getMessage());
             return null;
+        }
+    }
+    public boolean removeStudentFromCourse(String courseCode,String studentName){
+        try (Connection conn=getConnection()) {
+            String query = "DELETE FROM Courses WHERE Course = ? AND Students = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, courseCode);
+                stmt.setString(2, studentName);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
