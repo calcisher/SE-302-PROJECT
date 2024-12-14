@@ -20,6 +20,8 @@ public class DatabaseManager {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
 
 
+
+
     // Store classroom schedules in-memory to track assignments during the operation
     private Map<String, List<Schedule>> Schedules;
 
@@ -865,6 +867,112 @@ public class DatabaseManager {
                 pstmt.executeUpdate();
             }
         }
+    }
+    // Method to get common free times for selected students on a specific day
+    public static ObservableList<String> getCommonFreeTimes(List<Student> selectedStudents, String day) throws SQLException {
+        // Initialize a map to track free times for each student
+        Map<String, Set<String>> studentFreeTimesMap = new HashMap<>();
+
+        for (Student student : selectedStudents) {
+            Set<String> freeTimes = getFreeTimesForStudentOnDay(student.getName(), day);
+            studentFreeTimesMap.put(student.getName(), freeTimes);
+        }
+
+        // Find the intersection of free times across all selected students
+        Set<String> commonFreeTimes = new HashSet<>();
+        boolean first = true;
+
+        for (Set<String> freeTimes : studentFreeTimesMap.values()) {
+            if (first) {
+                commonFreeTimes.addAll(freeTimes);
+                first = false;
+            } else {
+                commonFreeTimes.retainAll(freeTimes);
+            }
+        }
+
+        // Sort the free times
+        List<String> sortedFreeTimes = new ArrayList<>(commonFreeTimes);
+        sortedFreeTimes.sort(Comparator.comparing(time -> LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"))));
+
+        return FXCollections.observableArrayList(sortedFreeTimes);
+    }
+
+    // Helper method to get free times for a single student on a specific day
+    private static Set<String> getFreeTimesForStudentOnDay(String studentName, String day) throws SQLException {
+        Set<String> busyTimes = new HashSet<>();
+        String query = "SELECT TimeToStart, DurationInLectureHours FROM Courses WHERE Students = ? AND TimeToStart LIKE ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, studentName);
+            preparedStatement.setString(2, day + "%"); // Matches the day
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                String timeToStart = resultSet.getString("TimeToStart");
+                int duration = resultSet.getInt("DurationInLectureHours");
+                String[] parts = timeToStart.split(" ");
+                if (parts.length == 2) {
+                    String time = parts[1];
+                    LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
+                    for (int i = 0; i < duration; i++) {
+                        LocalTime slotTime = startTime.plusMinutes(i * 55); // Assuming 55-minute slots
+                        busyTimes.add(slotTime.format(DateTimeFormatter.ofPattern("H:mm")));
+                    }
+                }
+            }
+        }
+
+        // Define all possible time slots
+        Set<String> allTimeSlots = new HashSet<>();
+        LocalTime currentTime = LocalTime.of(8, 30); // 08:30 start time
+        LocalTime endTime = LocalTime.of(22, 15); // 22:15 end time
+
+        while (!currentTime.isAfter(endTime)) {
+            allTimeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("H:mm")));
+            currentTime = currentTime.plusMinutes(55);
+        }
+
+        // Free times are all time slots minus busy times
+        allTimeSlots.removeAll(busyTimes);
+
+        return allTimeSlots;
+    }
+
+    // Method to determine the maximum number of continuous free slots starting from a specific time
+    public static int getMaxContinuousFreeSlots(List<Student> selectedStudents, String day, LocalTime startTime) throws SQLException {
+        // Fetch all common free times for the selected day
+        ObservableList<String> commonFreeTimes = getCommonFreeTimes(selectedStudents, day);
+
+        // Convert to sorted list
+        List<LocalTime> sortedFreeTimes = new ArrayList<>();
+        for (String timeStr : commonFreeTimes) {
+            sortedFreeTimes.add(LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("H:mm")));
+        }
+        sortedFreeTimes.sort(Comparator.naturalOrder());
+
+        // Find the index of the start time
+        int index = sortedFreeTimes.indexOf(startTime);
+        if (index == -1) {
+            return 0;
+        }
+
+        // Count continuous free slots
+        int count = 0;
+        for (int i = index; i < sortedFreeTimes.size() - 1; i++) {
+            LocalTime current = sortedFreeTimes.get(i);
+            LocalTime next = sortedFreeTimes.get(i + 1);
+            if (current.plusMinutes(55).equals(next)) {
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        return count + 1; // Including the initial slot
     }
 
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Label?>
@@ -16,16 +17,18 @@
     <Button text="Assign Students" onAction="#handleAssignStudents" GridPane.rowIndex="2" GridPane.columnIndex="1" />
 
     <Label text="Day:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-    <TextField fx:id="txtDay" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+    <ChoiceBox fx:id="choiceDay" GridPane.rowIndex="3" GridPane.columnIndex="1" />
 
-    <Label text="Start Hour:" GridPane.rowIndex="3" GridPane.columnIndex="2" />
-    <TextField fx:id="txtStartHour" GridPane.rowIndex="3" GridPane.columnIndex="3" />
+    <!-- Start Time Selection -->
+    <Label text="Start Time:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+    <ChoiceBox fx:id="choiceStartTime" GridPane.rowIndex="4" GridPane.columnIndex="1" />
 
-    <Label text="Duration:" GridPane.rowIndex="3" GridPane.columnIndex="4" />
-    <TextField fx:id="txtDuration" GridPane.rowIndex="3" GridPane.columnIndex="5" />
+    <!-- Duration Selection -->
+    <Label text="Duration (Hours):" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+    <ChoiceBox fx:id="choiceDuration" GridPane.rowIndex="5" GridPane.columnIndex="1" />
 
-    <Button text="Assign Class" onAction="#handleAssignClass" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+    <Button text="Assign Class" onAction="#handleAssignClass" GridPane.rowIndex="6" GridPane.columnIndex="1" />
 
-    <Button text="Done" onAction="#handleDone" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+    <Button text="Done" onAction="#handleDone" GridPane.rowIndex="7" GridPane.columnIndex="1" />
 </GridPane>
 

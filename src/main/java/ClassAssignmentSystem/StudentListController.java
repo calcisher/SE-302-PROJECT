@@ -30,6 +30,9 @@ public class StudentListController {
     @FXML
     private Button findAvailableTimeSlotsButton;
 
+    @FXML
+    private Button btnDone;
+
     private final ObservableList<Student> studentList = FXCollections.observableArrayList();
 
     @FXML
@@ -115,6 +118,19 @@ public class StudentListController {
             e.printStackTrace();
         }
     }
+    @FXML
+    private void handleClearChoices() {
+        for (Student student : studentList) {
+            student.getSelectBox().setSelected(false);
+        }
+    }
+
+    @FXML
+    private void handleDone() {
+        // Close the student selection window
+        Stage stage = (Stage) btnDone.getScene().getWindow();
+        stage.close();
+    }
 
     private boolean selectionMode = false;
 
@@ -132,6 +148,7 @@ public class StudentListController {
         }
         return selected;
     }
+
 
 
 }

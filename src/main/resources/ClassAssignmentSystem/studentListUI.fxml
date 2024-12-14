@@ -13,4 +13,8 @@
         </columns>
     </TableView>
     <Button fx:id="findAvailableTimeSlotsButton" disable="true" onAction="#handleFindAvailableTimeSlots" text="Find Available Time Slots" />
+    <Button fx:id="btnClearChoices" text="Clear Choices" onAction="#handleClearChoices" />
+    <Button fx:id="btnDone" text="Done" onAction="#handleDone" />
+
+
 </VBox>
