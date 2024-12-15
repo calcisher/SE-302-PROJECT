@@ -4,6 +4,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.IOException;
+
 
 import java.sql.*;
 import java.time.DayOfWeek;
@@ -371,7 +374,32 @@ public class DatabaseManager {
         }
     }
 
-    public void deleteDatabase() {}
+    public void deleteDatabase() {
+        try {
+            // Create a File object for the database
+            File dbFile = new File(databasePath);
+
+            // Check if the database file exists
+            if (dbFile.exists()) {
+                // Attempt to delete the file
+                boolean deleted = dbFile.delete();
+
+                if (deleted) {
+                    logger.info("Database '" + databasePath + "' deleted successfully.");
+                } else {
+                    logger.error("Failed to delete database '" + databasePath + "'.");
+                    throw new RuntimeException("Failed to delete database '" + databasePath + "'.");
+                }
+            } else {
+                logger.warn("Database file '" + databasePath + "' does not exist.");
+                throw new RuntimeException("Database file '" + databasePath + "' does not exist.");
+            }
+        } catch (Exception e) {
+            logger.error("Error deleting database: ", e);
+            throw new RuntimeException("Error deleting database", e);
+        }
+    }
+
 
     //For adding Course CSV data to Courses Table.
     public void insertCourseData(String coursesTableName, String[] columnNames, List<String[]> data) throws SQLException {

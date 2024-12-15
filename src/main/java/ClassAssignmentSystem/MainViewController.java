@@ -186,16 +186,60 @@ public class MainViewController {
     // Handler for Delete button
     @FXML
     private void handleDelete() {
-        try {
-            dbManager.deleteDatabase();
+        // Confirm Deletion with the User
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Confirm Deletion");
+        confirmationAlert.setHeaderText(null);
+        confirmationAlert.setContentText("Are you sure you want to delete all data? This action cannot be undone.");
 
-            showAlert(Alert.AlertType.INFORMATION, "Delete Successful", "Database Deleted successfully.");
-            btnDelete.setDisable(true);// disable delete data button after delete.
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Delete Failed", "There was an error Deleting the data.");
-        }
+        // Show the confirmation dialog and wait for user response
+        confirmationAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    // Invoke the deleteDatabase method
+                    dbManager.deleteDatabase();
+
+                    // Provide success feedback to the user
+                    showAlert(Alert.AlertType.INFORMATION, "Delete Successful", "Database 'university.db' has been deleted successfully.");
+
+                    // Reset the UI components
+                    resetUIAfterDeletion();
+                } catch (RuntimeException e) {
+                    // Handle any errors that occurred during deletion
+                    showAlert(Alert.AlertType.ERROR, "Delete Failed", e.getMessage());
+                }
+            }
+        });
     }
+
+    /**
+     * Resets the UI components after successful database deletion.
+     */
+    private void resetUIAfterDeletion() {
+        // Disable Import and Delete buttons
+        btnImport.setDisable(true);
+        btnDelete.setDisable(true);
+        btnAssignCourses.setDisable(true);
+
+        // Reset the text of the CSV selection buttons
+        btnSelectCoursesCSV.setText("Select Courses CSV");
+        btnSelectClassroomsCSV.setText("Select Classrooms CSV");
+
+        // Clear the ListViews
+        coursesListView.getItems().clear();
+        classroomsListView.getItems().clear();
+        studentsListView.getItems().clear();
+
+        // Clear the detail labels
+        lblCourseID.setText("Course ID: ");
+        lblTimeToStart.setText("Time to Start: ");
+        lblDuration.setText("Duration (Hours): ");
+        lblLecturer.setText("Lecturer: ");
+        lblAssignedClassroom.setText("Assigned Classroom: ");
+        lblClassroomCapacity.setText("Capacity: ");
+    }
+
+
 
     private void openCourseSchedule(String className) {
         try {
