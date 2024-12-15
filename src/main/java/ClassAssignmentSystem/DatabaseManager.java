@@ -837,19 +837,62 @@ public class DatabaseManager {
         }
     }
 
-    public boolean addStudentToCourse(String courseCode, String studentName) {
+    public boolean addStudentToCourse(String courseCode, String studentNames) {
         try (Connection conn = getConnection()) {
-            String query = "INSERT INTO Courses (Course, Students) VALUES (?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            // Kursun mevcut bilgilerini alıyoruz
+            String getCourseDetailsQuery = "SELECT TimeToStart, DurationInLectureHours, Classroom FROM Courses WHERE Course = ?";
+
+            try (PreparedStatement stmt = conn.prepareStatement(getCourseDetailsQuery)) {
                 stmt.setString(1, courseCode);
-                stmt.setString(2, studentName);
-                return stmt.executeUpdate() > 0;
+                ResultSet rs = stmt.executeQuery();
+
+                // Eğer kurs bulunamazsa, false döndürüyoruz
+                if (!rs.next()) {
+                    return false;
+                }
+
+                String timeToStart = rs.getString("TimeToStart");
+                int durationInLectureHours = rs.getInt("DurationInLectureHours");
+                String classroom = rs.getString("Classroom");
+
+                // Öğrencileri virgülle ayırarak alıyoruz
+                String[] studentArray = studentNames.split(",");
+
+                // Öğrencileri ayrı ayrı ekliyoruz
+                String insertStudentQuery = "INSERT INTO Courses (Course, Students, TimeToStart, DurationInLectureHours, Classroom) VALUES (?, ?, ?, ?, ?)";
+
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertStudentQuery)) {
+                    for (String studentName : studentArray) {
+                        studentName = studentName.trim(); // Öğrenci adlarını temizliyoruz, boşlukları kaldırıyoruz
+                        insertStmt.setString(1, courseCode);
+                        insertStmt.setString(2, studentName);
+                        insertStmt.setString(3, timeToStart);
+                        insertStmt.setInt(4, durationInLectureHours);
+                        insertStmt.setString(5, classroom);
+
+                        // Her öğrenci için sorguyu çalıştırıyoruz
+                        insertStmt.addBatch();
+                    }
+
+                    // Batch işlemi ile veritabanına toplu ekleme yapıyoruz
+                    int[] results = insertStmt.executeBatch();
+
+                    // Eğer işlem başarılıysa, her öğrenci için pozitif bir değer döner
+                    for (int result : results) {
+                        if (result <= 0) {
+                            return false;  // Eğer bir öğrenci eklenemediyse, işlemi başarısız kabul ediyoruz
+                        }
+                    }
+
+                    return true;  // Eğer tüm öğrenciler başarıyla eklenmişse
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
 
     public static ObservableList<String> getStudentsNotInCourse(String courseCode) {
         ObservableList<String> studentNames = FXCollections.observableArrayList();
@@ -903,6 +946,25 @@ public class DatabaseManager {
         }
         return 0; // Default to 0 if no data found
     }
+
+    public int getRemainingCapacity(String courseName) {
+        try (Connection connection = getConnection()) {
+            String query = "SELECT class.Capacity - COUNT(*) AS Capacity " +
+                    "FROM Courses course, Classrooms class " +
+                    "WHERE course.Classroom = class.Classroom AND Course = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, courseName);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("Capacity");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Eğer bir hata varsa veya sonuç boşsa, kalan kapasite 0 olarak döndürülür
+    }
+
 
 
 }

@@ -18,9 +18,8 @@ import static ClassAssignmentSystem.CSVImporter.showAlert;
 
 public class StudentListController {
 
-    ListView<String> studentListView;
-    ListView<String> courseListView;
-    DatabaseManager dbManager;
+
+    private MainViewController mainViewController;
     @FXML
     private TableView<Student> studentsTable;
 
@@ -38,22 +37,19 @@ public class StudentListController {
 
     private final ObservableList<Student> studentList = FXCollections.observableArrayList();
 
-    @FXML
     public void initialize() {
         studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("selectBox"));
 
-        // Disable the "Find Available Time Slots" button initially
+        // Varsayılan olarak butonları devre dışı bırak
         findAvailableTimeSlotsButton.setDisable(true);
         btnAdd.setDisable(true);
 
-        // Add a listener to enable the button when any checkbox is selected
-        studentList.forEach(student -> student.getSelectBox().selectedProperty().addListener((obs, oldVal, newVal) -> {
-            boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
-            findAvailableTimeSlotsButton.setDisable(!anySelected);
-        }));
+        // Kapasite kontrolü ekle
+        int remainingCapacity = mainViewController != null ? mainViewController.getDbManager().getRemainingCapacity(null): Integer.MAX_VALUE;
+        enforceCapacityLimit(remainingCapacity);
 
-        // Add double-click listener for the table rows
+        // Çift tıklama özelliği ekle
         studentsTable.setRowFactory(tv -> {
             TableRow<Student> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
@@ -66,9 +62,15 @@ public class StudentListController {
         });
     }
 
+    private ObservableList<Student> getSelectedStudents() {
+        return studentList.filtered(Student::isSelected);
+    }
+
+
     public void btnAddSetAvailable() {
         btnAdd.setDisable(false);
     }
+
     public void listAllStudentsFromDatabase() {
         // Load student data from the database
         loadStudentsFromDatabase();
@@ -94,6 +96,11 @@ public class StudentListController {
             });
             return row;
         });
+    }
+
+    // Set method for MainViewController
+    public void setMainViewController(MainViewController mainViewController) {
+        this.mainViewController = mainViewController;
     }
 
     private void loadStudentsFromDatabase() {
@@ -154,45 +161,83 @@ public class StudentListController {
             e.printStackTrace();
         }
     }
-    public void getListViewsAndDBManager(ListView<String> courseListView, ListView<String> studentListView, DatabaseManager dbManager) {
-        this.courseListView = courseListView;
-        this.studentListView = studentListView;
-        this.dbManager = dbManager;
-    }
     @FXML
     private void handleAddStudents() {
         try {
+            if (mainViewController == null) {
+                throw new IllegalStateException("MainViewController is not set.");
+            }
+
             // Get the selected course
-            String selectedCourse = courseListView.getSelectionModel().getSelectedItem();
+            String selectedCourse = mainViewController.getCourseListView().getSelectionModel().getSelectedItem();
 
             if (selectedCourse == null) {
-                showAlert(Alert.AlertType.WARNING, "No Course Selected", "Please select a course before adding students.");
+                mainViewController.showAlert(Alert.AlertType.WARNING, "No Course Selected", "Please select a course before adding students.");
                 return;
             }
 
-            ObservableList<Student> selectedStudents = studentsTable.getSelectionModel().getSelectedItems();
+            // Calculate remaining capacity
+            int remainingCapacity = mainViewController.getDbManager().getRemainingCapacity(selectedCourse);
 
-            if (selectedStudents.isEmpty()) {
-                showAlert(Alert.AlertType.WARNING, "No Students Selected", "Please select at least one student to add.");
+            if (remainingCapacity <= 0) {
+                mainViewController.showAlert(Alert.AlertType.WARNING, "Capacity Full", "No remaining capacity for this course.");
                 return;
             }
 
-            for (Student student : selectedStudents) {
-                boolean success = dbManager.addStudentToCourse(selectedCourse, student.getName());
-                if (success) {
-                    studentListView.getItems().add(student.getName());
-                } else {
-                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to add student: " + student.getName());
+            // Get selected students
+            ObservableList<Student> selectedStudents = FXCollections.observableArrayList();
+            for (Student student : studentsTable.getItems()) {
+                if (student.isSelected()) { // Check if the student's checkbox is selected
+                    selectedStudents.add(student);
                 }
             }
 
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");
+            if (selectedStudents.isEmpty()) {
+                mainViewController.showAlert(Alert.AlertType.WARNING, "No Students Selected", "Please select at least one student to add.");
+                return;
+            }
 
+            // Ensure selections do not exceed remaining capacity
+            if (selectedStudents.size() > remainingCapacity) {
+                mainViewController.showAlert(Alert.AlertType.WARNING, "Capacity Exceeded", "You cannot select more than the remaining capacity (" + remainingCapacity + ").");
+                return;
+            }
+
+            // Add selected students to the course
+            for (Student student : selectedStudents) {
+                mainViewController.addStudentToCourse(selectedCourse, student.getName());
+            }
+
+            mainViewController.showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding students.");
+            if (mainViewController != null) {
+                mainViewController.showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding students.");
+            }
         }
     }
+
+    private void enforceCapacityLimit(int remainingCapacity) {
+        studentList.forEach(student -> {
+            student.getSelectBox().selectedProperty().addListener((observable, oldValue, newValue) -> {
+                long selectedCount = studentList.stream().filter(s -> s.getSelectBox().isSelected()).count();
+
+                if (selectedCount > remainingCapacity) {
+                    student.getSelectBox().setSelected(false); // Seçimi geri al
+                    showAlert(Alert.AlertType.WARNING, "Capacity Exceeded", "You cannot select more than the remaining capacity (" + remainingCapacity + ").");
+                }
+
+                // Butonları dinamik olarak aktif/pasif yap
+                boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
+                findAvailableTimeSlotsButton.setDisable(!anySelected);
+                btnAdd.setDisable(!anySelected);
+            });
+        });
+    }
+
+
+
+
 
 
 }

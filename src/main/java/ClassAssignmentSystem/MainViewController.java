@@ -20,7 +20,7 @@ public class MainViewController {
     private File coursesCsvFile = null;
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
-
+    private static MainViewController instance;
 
     // UI Components - Buttons
 
@@ -102,6 +102,14 @@ public class MainViewController {
             handleImport();
             btnAssignCourses.setDisable(false);
         });
+    }
+
+    public MainViewController() {
+        instance = this; // Constructor çağrıldığında kendisini saklar
+    }
+
+    public static MainViewController getInstance() {
+        return instance;
     }
 
     // Handler for selecting Courses CSV file
@@ -384,7 +392,7 @@ public class MainViewController {
     }
 
     // Utility method to show alerts
-    private void showAlert(Alert.AlertType type, String title, String message) {
+    void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -405,49 +413,62 @@ public class MainViewController {
     @FXML
     private void handleAddStudent() {
         try {
-            // Get the selected course
+            // Get the selected course from the list
             String selectedCourse = coursesListView.getSelectionModel().getSelectedItem();
 
+            // Ensure a course is selected
             if (selectedCourse == null) {
                 showAlert(Alert.AlertType.WARNING, "No Course Selected", "Please select a course before adding students.");
                 return;
             }
 
+            // Load the StudentListUI.fxml
             FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
             Parent root = loader.load();
 
-            // Retrieve the controller and pass the selected course
+
+            // Retrieve the controller for the student list view
             StudentListController controller = loader.getController();
-            controller.btnAddSetAvailable();
-            controller.getListViewsAndDBManager(coursesListView,studentsListView,dbManager);
+            MainViewController mainViewController = MainViewController.getInstance();
+            controller.setMainViewController(mainViewController);
 
             // Fetch course capacity and current student count
             int courseCapacity = dbManager.getCourseCapacity(selectedCourse);
             int currentStudentCount = dbManager.getCourseStudentCount(selectedCourse);
 
-            // Calculate remaining capacity and pass it to the controller
+            // Calculate the remaining capacity
             int remainingCapacity = courseCapacity - currentStudentCount;
 
-            //For Test.
+            // Debugging output to test values
             System.out.println("Course: " + selectedCourse);
             System.out.println("Capacity: " + courseCapacity);
             System.out.println("Current Student Count: " + currentStudentCount);
+            System.out.println("Remaining Capacity: " + remainingCapacity);
 
+            // If no remaining capacity, show warning and exit
             if (remainingCapacity <= 0) {
                 showAlert(Alert.AlertType.WARNING, "Course Full", "The selected course is already full.");
                 return;
             }
 
+            // Pass the selected course and remaining capacity to the StudentListController
             controller.listMissingStudents(selectedCourse, remainingCapacity);
 
+            // Additional setup in the controller (like button enabling)
+            controller.btnAddSetAvailable();
+
+            // Display the StudentListUI in a new window
             Stage stage = new Stage();
             stage.setTitle("Student List");
             stage.setScene(new Scene(root));
             stage.show();
+
         } catch (Exception e) {
             e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while opening the student list.");
         }
     }
+
 
     private void deleteStudentFromCourse(String courseCode, String studentName) {
         try {
@@ -502,4 +523,17 @@ public class MainViewController {
             showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding the student.");
         }
     }
+
+    public ListView<String> getCourseListView() {
+        return coursesListView;
+    }
+
+    public DatabaseManager getDbManager() {
+        return dbManager;
+    }
+
+    public ListView<String> getStudentListView() {
+        return studentsListView;
+    }
+
 }

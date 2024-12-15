@@ -10,6 +10,7 @@ public class Student {
     private List<Course> enrolledCourses;
     private final CheckBox selectBox;
 
+
     public Student(String studentName, CheckBox selectBox) {
         this.name = studentName;
         this.selectBox = selectBox;
@@ -21,5 +22,8 @@ public class Student {
 
     public CheckBox getSelectBox() {
         return selectBox;
+    }
+    public boolean isSelected() {
+        return selectBox.isSelected();
     }
 }
