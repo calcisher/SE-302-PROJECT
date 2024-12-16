@@ -1,5 +1,7 @@
 package ClassAssignmentSystem;
 
+import java.util.Objects;
+
 public class Classroom {
     private final String name;
     private final int capacity;

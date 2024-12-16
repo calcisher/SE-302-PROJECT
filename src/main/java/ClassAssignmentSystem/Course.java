@@ -19,7 +19,7 @@ public class Course {
         this.lecturer = lecturer;
         this.assignedClassroom = assignedClassroom;
         this.enrolledStudents = new ArrayList<>();
-        this.studentCount = 0; // Initialize to zero
+        this.studentCount = studentCount; // Initialize to zero
     }
 
     // Existing getters...
@@ -51,6 +51,10 @@ public class Course {
 
     public Classroom getAssignedClassroom() {
         return assignedClassroom;
+    }
+
+    public void setAssignedClassroom(Classroom assignedClassroom) {
+        this.assignedClassroom = assignedClassroom;
     }
 
     // Optional: Setters if you plan to modify course details in the future
