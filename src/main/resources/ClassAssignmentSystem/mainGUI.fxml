@@ -67,8 +67,8 @@
                     <ListView fx:id="coursesListView" prefHeight="200" />
                 </VBox>
 
-                <!-- Course Details Section -->
-                <VBox prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
+                      <!-- Course Details Section -->
+                <VBox prefHeight="152.0" prefWidth="317.0" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
                     <padding>
                         <Insets bottom="10" left="10" right="10" top="10" />
                     </padding>
@@ -77,16 +77,18 @@
                     <Label fx:id="lblDuration" text="Duration (Hours): " />
                     <Label fx:id="lblLecturer" text="Lecturer: " />
                     <Label fx:id="lblAssignedClassroom" text="Assigned Classroom: " />
+               <Button fx:id="btnAddStudent" mnemonicParsing="false" onAction="#handleAddStudent" prefHeight="25.0" prefWidth="137.0" text="Add Student" />
                 </VBox>
             </VBox>
 
             <!-- Students Section -->
-            <VBox prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
+            <VBox prefHeight="409.0" prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
                 <Label text="Students:" />
                 <ListView fx:id="studentsListView" prefHeight="333.0" prefWidth="278.0" />
+                <Button fx:id="btnDeleteStudent" disable="true" onAction="#handleDeleteStudent" text="Delete Selected Student" />
             </VBox>
         </HBox>
 
@@ -99,16 +101,16 @@
             <!-- Classrooms and Details -->
             <VBox spacing="10">
                 <!-- Classrooms Section -->
-                <VBox prefHeight="322.0" prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
+                <VBox prefHeight="362.0" prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
                     <padding>
                         <Insets bottom="10" left="10" right="10" top="10" />
                     </padding>
                     <Label text="Classrooms:" />
-                    <ListView fx:id="classroomsListView" prefHeight="282.0" prefWidth="278.0" />
+                    <ListView fx:id="classroomsListView" prefHeight="337.0" prefWidth="278.0" />
                 </VBox>
 
                 <!-- Classroom Details Section -->
-                <VBox prefHeight="48.0" prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
+                <VBox prefHeight="27.0" prefWidth="300" spacing="5" style="-fx-border-color: black; -fx-border-width: 1;">
                     <padding>
                         <Insets bottom="10" left="10" right="10" top="10" />
                     </padding>

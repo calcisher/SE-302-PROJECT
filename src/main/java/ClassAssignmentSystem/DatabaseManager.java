@@ -914,6 +914,149 @@ public class DatabaseManager {
             return null;
         }
     }
+    public boolean removeStudentFromCourse(String courseCode,String studentName){
+        try (Connection conn=getConnection()) {
+            String query = "DELETE FROM Courses WHERE Course = ? AND Students = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, courseCode);
+                stmt.setString(2, studentName);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean addStudentToCourse(String courseCode, String studentNames) {
+        try (Connection conn = getConnection()) {
+            // Kursun mevcut bilgilerini alıyoruz
+            String getCourseDetailsQuery = "SELECT TimeToStart, DurationInLectureHours, Classroom FROM Courses WHERE Course = ?";
+
+            try (PreparedStatement stmt = conn.prepareStatement(getCourseDetailsQuery)) {
+                stmt.setString(1, courseCode);
+                ResultSet rs = stmt.executeQuery();
+
+                // Eğer kurs bulunamazsa, false döndürüyoruz
+                if (!rs.next()) {
+                    return false;
+                }
+
+                String timeToStart = rs.getString("TimeToStart");
+                int durationInLectureHours = rs.getInt("DurationInLectureHours");
+                String classroom = rs.getString("Classroom");
+
+                // Öğrencileri virgülle ayırarak alıyoruz
+                String[] studentArray = studentNames.split(",");
+
+                // Öğrencileri ayrı ayrı ekliyoruz
+                String insertStudentQuery = "INSERT INTO Courses (Course, Students, TimeToStart, DurationInLectureHours, Classroom) VALUES (?, ?, ?, ?, ?)";
+
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertStudentQuery)) {
+                    for (String studentName : studentArray) {
+                        studentName = studentName.trim(); // Öğrenci adlarını temizliyoruz, boşlukları kaldırıyoruz
+                        insertStmt.setString(1, courseCode);
+                        insertStmt.setString(2, studentName);
+                        insertStmt.setString(3, timeToStart);
+                        insertStmt.setInt(4, durationInLectureHours);
+                        insertStmt.setString(5, classroom);
+
+                        // Her öğrenci için sorguyu çalıştırıyoruz
+                        insertStmt.addBatch();
+                    }
+
+                    // Batch işlemi ile veritabanına toplu ekleme yapıyoruz
+                    int[] results = insertStmt.executeBatch();
+
+                    // Eğer işlem başarılıysa, her öğrenci için pozitif bir değer döner
+                    for (int result : results) {
+                        if (result <= 0) {
+                            return false;  // Eğer bir öğrenci eklenemediyse, işlemi başarısız kabul ediyoruz
+                        }
+                    }
+
+                    return true;  // Eğer tüm öğrenciler başarıyla eklenmişse
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public static ObservableList<String> getStudentsNotInCourse(String courseCode) {
+        ObservableList<String> studentNames = FXCollections.observableArrayList();
+        String query = "SELECT DISTINCT Students FROM Courses WHERE Students NOT IN (SELECT Students FROM Courses WHERE Course = ?)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    studentNames.add(resultSet.getString("Students"));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return studentNames;
+    }
+
+    public int getCourseCapacity(String courseCode) {
+        String query = "SELECT class.Capacity FROM Classrooms class, Courses course WHERE class.Classroom = course.Classroom AND course.Course = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("Capacity");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Default to 0 if no data found
+    }
+
+    public int getCourseStudentCount(String courseCode) {
+        String query = "SELECT COUNT(*) AS StudentCount FROM Courses WHERE Course = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, courseCode);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("StudentCount");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Default to 0 if no data found
+    }
+
+    public int getRemainingCapacity(String courseName) {
+        try (Connection connection = getConnection()) {
+            String query = "SELECT class.Capacity - COUNT(*) AS Capacity " +
+                    "FROM Courses course, Classrooms class " +
+                    "WHERE course.Classroom = class.Classroom AND Course = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, courseName);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("Capacity");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Eğer bir hata varsa veya sonuç boşsa, kalan kapasite 0 olarak döndürülür
+    }
+
+
 
     public Classroom findAvailableClass(String day, String startHour, int duration) throws SQLException {
         List<Classroom> classrooms = getAllClassroomsWithCapacity();
