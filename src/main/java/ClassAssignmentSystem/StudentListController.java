@@ -209,6 +209,9 @@ public class StudentListController {
             }
 
             mainViewController.showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");
+            Stage stage = (Stage) studentsTable.getScene().getWindow();
+            stage.close();
+
         } catch (Exception e) {
             e.printStackTrace();
             if (mainViewController != null) {

@@ -21,6 +21,7 @@ public class MainViewController {
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
     private static MainViewController instance;
+    private Stage studentListAddstage = new Stage();
 
     // UI Components - Buttons
 
@@ -458,10 +459,18 @@ public class MainViewController {
             controller.btnAddSetAvailable();
 
             // Display the StudentListUI in a new window
-            Stage stage = new Stage();
-            stage.setTitle("Student List");
-            stage.setScene(new Scene(root));
-            stage.show();
+            studentListAddstage.setTitle("Student List");
+            studentListAddstage.setScene(new Scene(root));
+            if (studentListAddstage.isShowing()){
+                studentListAddstage.toFront();
+            }
+            if (studentListAddstage.isIconified()) {
+                studentListAddstage.setIconified(false);
+            }
+            else {
+                studentListAddstage.show();
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -514,6 +523,7 @@ public class MainViewController {
                     // Update the ListView
                     studentsListView.getItems().add(studentName);
                     showAlert(Alert.AlertType.INFORMATION, "Success", "Student added to the course successfully.");
+
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Error", "Failed to add student to the course.");
                 }
