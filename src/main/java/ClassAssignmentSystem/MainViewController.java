@@ -22,8 +22,17 @@ public class MainViewController {
     private File coursesCsvFile = null;
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
+    private static MainViewController instance;
+    private Stage studentListAddstage = new Stage();
 
     // UI Components - Buttons
+
+    @FXML
+    private Button btnAddStudent;
+
+    @FXML
+    private Button btnDeleteStudent;
+
     @FXML
     private Button btnSelectCoursesCSV;
 
@@ -107,6 +116,14 @@ public class MainViewController {
         });
     }
 
+    public MainViewController() {
+        instance = this; // Constructor çağrıldığında kendisini saklar
+    }
+
+    public static MainViewController getInstance() {
+        return instance;
+    }
+
     // Handler for selecting Courses CSV file
     @FXML
     private void handleSelectCoursesCSV() {
@@ -137,8 +154,6 @@ public class MainViewController {
             showAlert(Alert.AlertType.ERROR, "Error", "An error occurred during assignment.");
         }
     }
-
-
 
 
     // Handler for Assign Courses button
@@ -181,18 +196,18 @@ public class MainViewController {
     // Handler for Import button
     @FXML
     private void handleImport() {
-            try {
-                CSVImporter.importClassroomData(classroomsCsvFile,dbManager);
-                CSVImporter.importCourseData(coursesCsvFile,dbManager);
-                dbManager.addClassroomColumnIfMissing();
-                showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
-                btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
-                btnDelete.setDisable(false); //Enable delete data button after import
+        try {
+            CSVImporter.importClassroomData(classroomsCsvFile, dbManager);
+            CSVImporter.importCourseData(coursesCsvFile, dbManager);
+            dbManager.addClassroomColumnIfMissing();
+            showAlert(Alert.AlertType.INFORMATION, "Import Successful", "Courses and Classrooms imported successfully.");
+            btnAssignCourses.setDisable(false); //Enable Assign Courses button after import
+            btnDelete.setDisable(false); //Enable delete data button after import
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Import Failed", "There was an error importing the data.");
+        }
     }
 
     // Handler for Delete button
@@ -306,6 +321,7 @@ public class MainViewController {
                 };
 
                 cell.setOnMouseClicked(event -> {
+                    btnDeleteStudent.setDisable(false);
                     if (event.getClickCount() == 2 && !cell.isEmpty()) {
                         String selectedCourse = cell.getItem();
                         openCourseSchedule(selectedCourse);
@@ -314,6 +330,8 @@ public class MainViewController {
 
                 return cell;
             });
+
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to retrieve classrooms.");
@@ -367,6 +385,9 @@ public class MainViewController {
                             };
 
                             cell.setOnMouseClicked(event -> {
+                                if (event.getClickCount() == 1 && !cell.isEmpty()) {
+                                    btnDeleteStudent.setDisable(false);
+                                }
                                 if (event.getClickCount() == 2 && !cell.isEmpty()) {
                                     String selectedStudent = cell.getItem();
                                     StudentListController.openStudentSchedule(selectedStudent);
@@ -412,6 +433,10 @@ public class MainViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
             Parent root = loader.load();
+
+            // Retrieve the controller and call ListAllStudentsFromDatabase
+            StudentListController controller = loader.getController();
+            controller.listAllStudentsFromDatabase();
 
             Stage stage = new Stage();
             stage.setTitle("Student List");
@@ -491,7 +516,7 @@ public class MainViewController {
 
 
     // Utility method to show alerts
-    private void showAlert(Alert.AlertType type, String title, String message) {
+    void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -517,4 +542,150 @@ public class MainViewController {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void handleDeleteStudent() {
+        String selectedStudent = studentsListView.getSelectionModel().getSelectedItem();
+        String selectedCourseCode = coursesListView.getSelectionModel().getSelectedItem();
+        if (selectedStudent != null) {
+            // Call the delete method and update the UI
+            deleteStudentFromCourse(selectedCourseCode, selectedStudent);
+        }
+    }
+
+    @FXML
+    private void handleAddStudent() {
+        try {
+            // Get the selected course from the list
+            String selectedCourse = coursesListView.getSelectionModel().getSelectedItem();
+
+            // Ensure a course is selected
+            if (selectedCourse == null) {
+                showAlert(Alert.AlertType.WARNING, "No Course Selected", "Please select a course before adding students.");
+                return;
+            }
+
+            // Load the StudentListUI.fxml
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
+            Parent root = loader.load();
+
+
+            // Retrieve the controller for the student list view
+            StudentListController controller = loader.getController();
+            MainViewController mainViewController = MainViewController.getInstance();
+            controller.setMainViewController(mainViewController);
+
+            // Fetch course capacity and current student count
+            int courseCapacity = dbManager.getCourseCapacity(selectedCourse);
+            int currentStudentCount = dbManager.getCourseStudentCount(selectedCourse);
+
+            // Calculate the remaining capacity
+            int remainingCapacity = courseCapacity - currentStudentCount;
+
+            // Debugging output to test values
+            System.out.println("Course: " + selectedCourse);
+            System.out.println("Capacity: " + courseCapacity);
+            System.out.println("Current Student Count: " + currentStudentCount);
+            System.out.println("Remaining Capacity: " + remainingCapacity);
+
+            // If no remaining capacity, show warning and exit
+            if (remainingCapacity <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Course Full", "The selected course is already full.");
+                return;
+            }
+
+            // Pass the selected course and remaining capacity to the StudentListController
+            controller.listMissingStudents(selectedCourse, remainingCapacity);
+
+            // Additional setup in the controller (like button enabling)
+            controller.btnAddSetAvailable();
+
+            // Display the StudentListUI in a new window
+            studentListAddstage.setTitle("Student List");
+            studentListAddstage.setScene(new Scene(root));
+            if (studentListAddstage.isShowing()){
+                studentListAddstage.toFront();
+            }
+            if (studentListAddstage.isIconified()) {
+                studentListAddstage.setIconified(false);
+            }
+            else {
+                studentListAddstage.show();
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while opening the student list.");
+        }
+    }
+
+
+    private void deleteStudentFromCourse(String courseCode, String studentName) {
+        try {
+            // Confirm deletion
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Deletion");
+            confirmationAlert.setHeaderText("Are you sure you want to delete the student?");
+            confirmationAlert.setContentText("Student: " + studentName);
+
+            // Handle user response
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Remove the student from the course in the database
+                boolean success = dbManager.removeStudentFromCourse(courseCode, studentName);
+                if (success) {
+                    // Update the ListView
+                    studentsListView.getItems().remove(studentName);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Student removed from the course successfully.");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to remove student from the course.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while removing the student.");
+        }
+    }
+
+    public void addStudentToCourse(String courseCode, String studentName) {
+        try {
+            // Confirm addition
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Addition");
+            confirmationAlert.setHeaderText("Are you sure you want to add the student?");
+            confirmationAlert.setContentText("Student: " + studentName);
+
+            // Handle user response
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Add the student to the course in the database
+                boolean success = dbManager.addStudentToCourse(courseCode, studentName);
+                if (success) {
+                    // Update the ListView
+                    studentsListView.getItems().add(studentName);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Student added to the course successfully.");
+
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to add student to the course.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding the student.");
+        }
+    }
+
+    public ListView<String> getCourseListView() {
+        return coursesListView;
+    }
+
+    public DatabaseManager getDbManager() {
+        return dbManager;
+    }
+
+    public ListView<String> getStudentListView() {
+        return studentsListView;
+    }
+
 }
