@@ -54,9 +54,10 @@ public class CreateCourseController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("studentListUI.fxml"));
             Parent root = loader.load();
-
+            // Load student data from the database
             StudentListController studentListController = loader.getController();
             studentListController.setSelectionMode(true); // Enable selection mode
+            studentListController.listAllStudentsFromDatabase();
             Stage stage = new Stage();
             stage.setTitle("Select Students");
             stage.setScene(new Scene(root));
