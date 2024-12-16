@@ -5,9 +5,6 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
-import java.io.IOException;
-
-
 import java.sql.*;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -19,14 +16,10 @@ import java.util.stream.Collectors;
 public class DatabaseManager {
 
     private static String databasePath;
-
     private static final Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
 
-
-
-
     // Store classroom schedules in-memory to track assignments during the operation
-    private Map<String, List<Schedule>> Schedules;
+    private final Map<String, List<Schedule>> Schedules;
 
     public DatabaseManager(String databasePath) {
         DatabaseManager.databasePath = databasePath;
@@ -1314,4 +1307,17 @@ public class DatabaseManager {
         // Update the Course object's assigned classroom
         course.setAssignedClassroom(getClassroomDetails(newClassroomName));
     }
+
+    public static boolean areTablesPresent() throws SQLException {
+        String query = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            return resultSet.next();
+        }
+    }
+
+
 }

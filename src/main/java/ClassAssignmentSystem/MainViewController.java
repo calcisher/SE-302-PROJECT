@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 public class MainViewController {
 
+
     // File References
     private File coursesCsvFile = null;
     private File classroomsCsvFile = null;
@@ -29,6 +30,9 @@ public class MainViewController {
 
     @FXML
     private Button btnAddStudent;
+
+    @FXML
+    public Button btnCreateCourse;
 
     @FXML
     private Button btnDeleteStudent;
@@ -93,9 +97,13 @@ public class MainViewController {
 
     // Initialization method
     @FXML
-    public void initialize() {
+    public void initialize() throws SQLException {
         // Disable Import button until both CSV files are selected
         updateImportButtonState();
+
+        if (DatabaseManager.areTablesPresent()) {
+            btnDelete.setDisable(false);
+        }
 
         // Add listeners to list views
         coursesListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> displayCourseDetails(newValue));

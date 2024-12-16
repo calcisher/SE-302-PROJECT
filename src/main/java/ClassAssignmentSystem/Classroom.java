@@ -1,11 +1,8 @@
 package ClassAssignmentSystem;
 
-import java.util.Objects;
-
 public class Classroom {
     private final String name;
     private final int capacity;
-    private boolean[] availability; //for time intervals
 
     public Classroom(String name, int capacity) {
         this.name = name;

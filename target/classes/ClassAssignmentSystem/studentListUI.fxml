@@ -6,8 +6,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.StudentListController">
-    <TableView fx:id="studentsTable">
+<VBox prefHeight="395.0" prefWidth="231.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClassAssignmentSystem.StudentListController">
+    <TableView fx:id="studentsTable" prefHeight="356.0" prefWidth="341.0">
         <columns>
             <TableColumn fx:id="studentNameColumn" text="Student Name" />
             <TableColumn fx:id="selectColumn" text="Select" />
@@ -15,10 +15,10 @@
     </TableView>
    <HBox prefHeight="36.0" prefWidth="248.0">
       <children>
-          <Button fx:id="findAvailableTimeSlotsButton" disable="true" onAction="#handleFindAvailableTimeSlots" text="Find Available Time Slots" />
-          <Button fx:id="btnClearChoices" text="Clear Choices" onAction="#handleClearChoices" />
-         <Button fx:id="btnAdd" mnemonicParsing="false" onAction="#handleAddStudents" prefHeight="25.0" prefWidth="92.0" text="Add" />
-          <Button fx:id="btnDone" text="Done" onAction="#handleDone" />
+          <Button fx:id="btnClearChoices" onAction="#handleClearChoices" text="Clear Choices" />
+          <Button fx:id="btnDone" onAction="#handleDone" prefHeight="25.0" prefWidth="54.0" text="Done" />
+         <Button fx:id="btnAdd" mnemonicParsing="false" onAction="#handleAddStudents" prefHeight="25.0" prefWidth="86.0" text="Add" />
       </children>
    </HBox>
+    <Button fx:id="findAvailableTimeSlotsButton" disable="true" onAction="#handleFindAvailableTimeSlots" text="Find Available Time Slots" />
 </VBox>
