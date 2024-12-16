@@ -45,7 +45,7 @@ public class StudentListController {
     public void initialize() {
         studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("selectBox"));
-        
+
 
         studentsTable.setItems(studentList);
 
@@ -250,7 +250,13 @@ public class StudentListController {
 
             // Add selected students to the course
             for (Student student : selectedStudents) {
-                mainViewController.addStudentToCourse(selectedCourse, student.getName());
+                if (!mainViewController.getDbManager().isCourseTimeFreeForStudent(student.getName(),selectedCourse)){
+                    mainViewController.showAlert(Alert.AlertType.WARNING, "Conflict!", "Conflict");
+                }
+                else {
+                    mainViewController.addStudentToCourse(selectedCourse, student.getName());
+                }
+
             }
 
             mainViewController.showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");

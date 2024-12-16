@@ -1160,6 +1160,67 @@ public class DatabaseManager {
         return allTimeSlots;
     }
 
+    public static Set<String> getCourseTimes(String courseName, String day) throws SQLException {
+        Set<String> courseTimes = new HashSet<>();
+        String query = "SELECT TimeToStart, DurationInLectureHours FROM Courses WHERE Course = ? AND TimeToStart LIKE ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, courseName);
+            preparedStatement.setString(2, day + "%"); // Matches the day
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                String timeToStart = resultSet.getString("TimeToStart");
+                int duration = resultSet.getInt("DurationInLectureHours");
+                String[] parts = timeToStart.split(" ");
+                if (parts.length == 2) {
+                    String time = parts[1];
+                    LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
+                    for (int i = 0; i < duration; i++) {
+                        LocalTime slotTime = startTime.plusMinutes(i * 55); // Assuming 55-minute slots
+                        courseTimes.add(slotTime.format(DateTimeFormatter.ofPattern("H:mm")));
+                    }
+                }
+            }
+        }
+
+        return courseTimes;
+    }
+
+    public static boolean isCourseTimeFreeForStudent(String studentName, String courseName) throws SQLException {
+        // Query to get the day of the course
+        String queryDay = "SELECT TimeToStart FROM Courses WHERE Course = ? LIMIT 1";
+        String day;
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(queryDay)) {
+
+            preparedStatement.setString(1, courseName);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String timeToStart = resultSet.getString("TimeToStart");
+                day = timeToStart.split(" ")[0]; // Extract the day from TimeToStart
+            } else {
+                throw new SQLException("Course not found: " + courseName);
+            }
+        }
+
+        Set<String> freeTimes = getFreeTimesForStudentOnDay(studentName,day);
+        Set<String> courseTimes = getCourseTimes(courseName,day);
+
+        for (String courseTime : courseTimes) {
+            if (!freeTimes.contains(courseTime)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Method to determine the maximum number of continuous free slots starting from a specific time
     public static int getMaxContinuousFreeSlots(List<Student> selectedStudents, String day, LocalTime startTime) throws SQLException {
         // Fetch all common free times for the selected day
