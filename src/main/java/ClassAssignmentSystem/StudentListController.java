@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import java.util.List;
+import java.util.Optional;
 
 import static ClassAssignmentSystem.CSVImporter.showAlert;
 
@@ -248,15 +249,26 @@ public class StudentListController {
                 return;
             }
 
+            // Show confirmation dialog before proceeding
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Action");
+            confirmationAlert.setHeaderText("Add Selected Students");
+            confirmationAlert.setContentText("Are you sure you want to add the selected students to the course?");
+
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+
+            if (result.isPresent() && result.get() == ButtonType.CANCEL) {
+                mainViewController.showAlert(Alert.AlertType.INFORMATION, "Cancelled", "No students were added to the course.");
+                return;
+            }
+
             // Add selected students to the course
             for (Student student : selectedStudents) {
-                if (!mainViewController.getDbManager().isCourseTimeFreeForStudent(student.getName(),selectedCourse)){
-                    mainViewController.showAlert(Alert.AlertType.WARNING, "Conflict!", "Conflict");
-                }
-                else {
+                if (!DatabaseManager.isCourseTimeFreeForStudent(student.getName(), selectedCourse)) {
+                    mainViewController.showAlert(Alert.AlertType.WARNING, "Conflict!", "The selected student is not available during the specified course times.");
+                } else {
                     mainViewController.addStudentToCourse(selectedCourse, student.getName());
                 }
-
             }
 
             mainViewController.showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");
@@ -270,6 +282,7 @@ public class StudentListController {
             }
         }
     }
+
 
     private void enforceCapacityLimit(int remainingCapacity) {
         studentList.forEach(student -> {
