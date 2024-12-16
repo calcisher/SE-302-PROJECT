@@ -45,9 +45,7 @@ public class StudentListController {
     public void initialize() {
         studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("selectBox"));
-
-        // Load student data from the database
-        loadStudentsFromDatabase();
+        
 
         studentsTable.setItems(studentList);
 
