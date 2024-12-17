@@ -20,5 +20,5 @@
          <Button fx:id="btnAdd" mnemonicParsing="false" onAction="#handleAddStudents" prefHeight="25.0" prefWidth="86.0" text="Add" />
       </children>
    </HBox>
-    <Button fx:id="findAvailableTimeSlotsButton" disable="true" onAction="#handleFindAvailableTimeSlots" text="Find Available Time Slots" />
+    <Button fx:id="findAvailableTimeSlotsButton" disable="true"  onAction="#handleFindAvailableTimeSlots" text="Find Available Time Slots" />
 </VBox>

@@ -57,11 +57,6 @@ public class StudentListController {
         int remainingCapacity = mainViewController != null ? mainViewController.getDbManager().getRemainingCapacity(null): Integer.MAX_VALUE;
         enforceCapacityLimit(remainingCapacity);
 
-        // Add a listener to enable the button when any checkbox is selected
-        studentList.forEach(student -> student.getSelectBox().selectedProperty().addListener((obs, oldVal, newVal) -> {
-            boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
-            findAvailableTimeSlotsButton.setDisable(!anySelected);
-        }));
 
         // Add double-click listener for the table rows
         studentsTable.setRowFactory(tv -> {
@@ -88,6 +83,13 @@ public class StudentListController {
     public void listAllStudentsFromDatabase() {
         // Load student data from the database
         loadStudentsFromDatabase();
+        // Add listeners to checkboxes after loading students (this action have to be placed after loading student data)
+        for (Student student : studentList) {
+            student.getSelectBox().selectedProperty().addListener((obs, oldVal, newVal) -> {
+                boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
+                findAvailableTimeSlotsButton.setDisable(!anySelected);
+            });
+        }
         // Set the data to the table
         studentsTable.setItems(studentList);
     }
@@ -95,6 +97,13 @@ public class StudentListController {
     public void listMissingStudents(String courseName, int remainingCapacity) {
         // Load missing student data from the database
         loadMissingStudentsFromDatabase(courseName);
+        // Add listeners to checkboxes after loading students (this action have to be placed after loading student data)
+        for (Student student : studentList) {
+            student.getSelectBox().selectedProperty().addListener((obs, oldVal, newVal) -> {
+                boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
+                findAvailableTimeSlotsButton.setDisable(!anySelected);
+            });
+        }
 
         // Limit selection to remaining capacity
         studentsTable.setItems(studentList);
