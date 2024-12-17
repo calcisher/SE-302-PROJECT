@@ -13,7 +13,7 @@ public class MainApp extends Application {
         Parent root = loader.load();
         System.out.println("..");
         primaryStage.setTitle("Main Interface");
-        primaryStage.setScene(new Scene(root, 800, 600));
+        primaryStage.setScene(new Scene(root, 850, 650));
         primaryStage.show();
     }
 
