@@ -38,6 +38,7 @@ public class StudentListController {
     @FXML
     private Button btnDone;
 
+
     private final ObservableList<Student> studentList = FXCollections.observableArrayList();
 
     @FXML
@@ -74,6 +75,8 @@ public class StudentListController {
     /*private ObservableList<Student> getSelectedStudents() {
         return studentList.filtered(Student::isSelected);
     }*/
+
+
 
 
     public void btnAddSetAvailable() {
@@ -192,7 +195,7 @@ public class StudentListController {
     }
 
     @FXML
-    private void handleDone() {
+    private void handleDone() {  // Done Button in StudentListUI
         // Close the student selection window
         Stage stage = (Stage) btnDone.getScene().getWindow();
         stage.close();
@@ -309,6 +312,10 @@ public class StudentListController {
                 btnAdd.setDisable(!anySelected);
             });
         });
+    }
+
+    public void disableDoneButton() {  //disables Done Button (in StudentList UI) at necessary conditions
+        btnDone.setDisable(true);
     }
 
 

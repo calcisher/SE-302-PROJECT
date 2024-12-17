@@ -580,6 +580,7 @@ public class MainViewController {
 
             // Retrieve the controller for the student list view
             StudentListController controller = loader.getController();
+            controller.disableDoneButton(); //Disable Done Button in Student Addition Part
             MainViewController mainViewController = MainViewController.getInstance();
             controller.setMainViewController(mainViewController);
 

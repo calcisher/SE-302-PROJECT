@@ -151,7 +151,7 @@ public class CreateCourseController {
     }
 
     @FXML
-    private void handleDone() {
+    private void handleDone() {  //Done Button in CreateCourse UI
         try {
             String courseID = txtCourseID.getText();
             String lecturer = txtLecturer.getText();
