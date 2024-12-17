@@ -283,7 +283,7 @@ public class StudentListController {
                 }
             }
 
-            mainViewController.showAlert(Alert.AlertType.INFORMATION, "Success", "Selected students added to the course successfully.");
+            mainViewController.showAlert(Alert.AlertType.INFORMATION, "Done", "Adding process has done.");
             Stage stage = (Stage) studentsTable.getScene().getWindow();
             stage.close();
 
