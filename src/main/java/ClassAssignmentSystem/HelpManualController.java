@@ -63,7 +63,7 @@ public class HelpManualController {
           - **Assign Students:** A button that redirects you to the **StudentListGUI** to select and assign students to the course.
           - **Schedule:** Choice boxes for selecting the course's start day, start time, and duration. The available options in each choice box are constrained based on the students' common free times to ensure the course can be scheduled without conflicts.
           - **Assign Classroom:** After setting the schedule, click the **Assign Class** button to allocate an available classroom that meets the capacity and scheduling requirements.
-          - **Finalize:** Once all details are set, click the **Done** button to save the course to the database. The new course will appear in the Courses List, the students' schedules, and the classroom's weekly schedule.
+          - **Finalize:** Once all details are set, click the **Done** button to save the course to the database. The new course will appear in the Courses List (when you reclick the List Courses button), the students' schedules, and the classroom's weekly schedule.
         
         #### **StudentListGUI**
         
