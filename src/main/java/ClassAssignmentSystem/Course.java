@@ -8,7 +8,6 @@ public class Course {
     private final String timeToStart;
     private final int durationInLectureHours;
     private final String lecturer;
-    private List<Student> enrolledStudents;
     private Classroom assignedClassroom;
     private int studentCount; // New field to store the number of enrolled students
 
@@ -18,8 +17,8 @@ public class Course {
         this.durationInLectureHours = durationInLectureHours;
         this.lecturer = lecturer;
         this.assignedClassroom = assignedClassroom;
-        this.enrolledStudents = new ArrayList<>();
-        this.studentCount = studentCount; // Initialize to zero
+        List<Student> enrolledStudents = new ArrayList<>();
+        // Initialize to zero
     }
 
     // Existing getters...

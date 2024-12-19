@@ -9,14 +9,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.time.LocalTime;
-
-
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CreateCourseController {
 
+    //UI Components
     @FXML
     private TextField txtCourseID;
     @FXML
@@ -39,14 +37,10 @@ public class CreateCourseController {
         ));
 
         // Add listener to Day ChoiceBox to update Start Time ChoiceBox
-        choiceDay.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            updateStartTimeChoices(newValue);
-        });
+        choiceDay.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> updateStartTimeChoices(newValue));
 
         // Add listener to Start Time ChoiceBox to update Duration ChoiceBox
-        choiceStartTime.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            updateDurationChoices(newValue);
-        });
+        choiceStartTime.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> updateDurationChoices(newValue));
     }
 
     @FXML
@@ -151,7 +145,8 @@ public class CreateCourseController {
     }
 
     @FXML
-    private void handleDone() {  //Done Button in CreateCourse UI
+    private void handleDone() {
+        //Done Button in CreateCourse UI
         try {
             String courseID = txtCourseID.getText();
             String lecturer = txtLecturer.getText();

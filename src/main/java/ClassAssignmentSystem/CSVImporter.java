@@ -10,16 +10,11 @@ import java.util.Map;
 
 public class CSVImporter {
 
-    /*private File classroomFile;
-    private File courseFile;
-    private final DatabaseManager databaseManager = new DatabaseManager("university.db");
-     */
-
     public static void importClassroomData(File classroomFile, DatabaseManager db) {
         try {
             if (classroomFile != null) {
                 List<String[]> classroomData = readCSV(classroomFile);
-                String[] classroomColumns = classroomData.get(0); // First row is headers
+                String[] classroomColumns = classroomData.getFirst(); // First row is headers
 
                 // Define column data types
                 Map<String, String> columnsWithTypes = new LinkedHashMap<>();
@@ -45,9 +40,9 @@ public class CSVImporter {
         try {
             if (courseFile != null) {
                 List<String[]> courseData = readCSV(courseFile);
-                String[] courseColumns = courseData.get(0); // First row is headers
+                String[] courseColumns = courseData.getFirst(); // First row is headers
 
-                // Define column data types
+                //Define column data types
                 Map<String, String> columnsWithTypes = new LinkedHashMap<>();
                 for (String column : courseColumns) {
                     switch (column.toLowerCase()) {
@@ -74,13 +69,12 @@ public class CSVImporter {
     }
 
 
-
     public static List<String[]> readCSV(File file) throws Exception {
         List<String[]> data = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
-                data.add(line.split(";"));  // Note: We're using ';' as delimiter
+                data.add(line.split(";"));
             }
         }
         return data;

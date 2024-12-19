@@ -10,10 +10,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import java.io.IOException;
 import java.util.ArrayList;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +20,10 @@ import static ClassAssignmentSystem.CSVImporter.showAlert;
 public class StudentListController {
 
 
+
     private MainViewController mainViewController;
+
+    private final ObservableList<Student> studentList = FXCollections.observableArrayList();
     @FXML
     private TableView<Student> studentsTable;
 
@@ -38,17 +39,15 @@ public class StudentListController {
     @FXML
     private Button btnDone;
 
-
-    private final ObservableList<Student> studentList = FXCollections.observableArrayList();
-
     @FXML
     private Button btnAdd;
+
+    @FXML
+    public Button btnClearChoices;
 
     public void initialize() {
         studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("selectBox"));
-
-
         studentsTable.setItems(studentList);
 
         // Disable the "Find Available Time Slots" button initially
@@ -57,7 +56,6 @@ public class StudentListController {
 
         int remainingCapacity = mainViewController != null ? mainViewController.getDbManager().getRemainingCapacity(null): Integer.MAX_VALUE;
         enforceCapacityLimit(remainingCapacity);
-
 
         // Add double-click listener for the table rows
         studentsTable.setRowFactory(tv -> {
@@ -71,13 +69,6 @@ public class StudentListController {
             return row;
         });
     }
-
-    /*private ObservableList<Student> getSelectedStudents() {
-        return studentList.filtered(Student::isSelected);
-    }*/
-
-
-
 
     public void btnAddSetAvailable() {
         btnAdd.setDisable(false);
@@ -124,7 +115,6 @@ public class StudentListController {
         });
     }
 
-    // Set method for MainViewController
     public void setMainViewController(MainViewController mainViewController) {
         this.mainViewController = mainViewController;
     }
@@ -187,6 +177,7 @@ public class StudentListController {
             e.printStackTrace();
         }
     }
+
     @FXML
     private void handleClearChoices() {
         for (Student student : studentList) {
@@ -201,6 +192,8 @@ public class StudentListController {
         stage.close();
     }
 
+
+    //?!?!?
     private boolean selectionMode = false;
 
     public void setSelectionMode(boolean enable) {
@@ -277,7 +270,7 @@ public class StudentListController {
             // Add selected students to the course
             for (Student student : selectedStudents) {
                 if (!DatabaseManager.isCourseTimeFreeForStudent(student.getName(), selectedCourse)) {
-                    mainViewController.showAlert(Alert.AlertType.WARNING, "Conflict!", "The selected student is not available during the specified course times.");
+                    mainViewController.showAlert(Alert.AlertType.WARNING, "Conflict!", "The selected student " + student.getName() + " is not available during the specified course times.");
                 } else {
                     mainViewController.addStudentToCourse(selectedCourse, student.getName());
                 }
@@ -302,11 +295,10 @@ public class StudentListController {
                 long selectedCount = studentList.stream().filter(s -> s.getSelectBox().isSelected()).count();
 
                 if (selectedCount > remainingCapacity) {
-                    student.getSelectBox().setSelected(false); // Seçimi geri al
+                    student.getSelectBox().setSelected(false);
                     showAlert(Alert.AlertType.WARNING, "Capacity Exceeded", "You cannot select more than the remaining capacity (" + remainingCapacity + ").");
                 }
 
-                // Butonları dinamik olarak aktif/pasif yap
                 boolean anySelected = studentList.stream().anyMatch(s -> s.getSelectBox().isSelected());
                 findAvailableTimeSlotsButton.setDisable(!anySelected);
                 btnAdd.setDisable(!anySelected);

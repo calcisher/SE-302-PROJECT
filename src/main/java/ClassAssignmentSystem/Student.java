@@ -1,13 +1,9 @@
 package ClassAssignmentSystem;
-
 import javafx.scene.control.CheckBox;
-
-import java.util.List;
 
 public class Student {
 
     private final String name;
-    private List<Course> enrolledCourses;
     private final CheckBox selectBox;
 
 
@@ -23,6 +19,7 @@ public class Student {
     public CheckBox getSelectBox() {
         return selectBox;
     }
+
     public boolean isSelected() {
         return selectBox.isSelected();
     }

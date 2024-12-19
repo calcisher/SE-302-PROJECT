@@ -21,6 +21,7 @@ public class DatabaseManager {
     // Store classroom schedules in-memory to track assignments during the operation
     private final Map<String, List<Schedule>> Schedules;
 
+    //Constructor
     public DatabaseManager(String databasePath) {
         DatabaseManager.databasePath = databasePath;
         Schedules = new HashMap<>();
@@ -72,7 +73,7 @@ public class DatabaseManager {
 
                         if (weeklySchedule.containsKey(day)) {
                             for (int i = 0; i < duration; i++) {
-                                LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                LocalTime slotTime = startTime.plusMinutes(i * 55L);
                                 weeklySchedule.get(day).put(slotTime, courseAndClassroom);
                             }
                         }
@@ -149,7 +150,7 @@ public class DatabaseManager {
 
                         if (weeklySchedule.containsKey(day)) {
                             for (int i = 0; i < duration; i++) {
-                                LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                LocalTime slotTime = startTime.plusMinutes(i * 55L);
                                 weeklySchedule.get(day).put(slotTime, course);
                             }
                         }
@@ -232,7 +233,7 @@ public class DatabaseManager {
                                 LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
                                 if (commonFreeTimeSlots.containsKey(day)) {
                                     for (int i = 0; i < duration; i++) {
-                                        LocalTime slotTime = startTime.plusMinutes(i * 55);
+                                        LocalTime slotTime = startTime.plusMinutes(i * 55L);
                                         commonFreeTimeSlots.get(day).put(slotTime, false); // Mark as busy
                                     }
                                 }
@@ -316,6 +317,7 @@ public class DatabaseManager {
     }
 
 
+    //No Used
     public void initializeDatabaseAfterImport() {
         try (Connection conn = getConnection()) {
             addClassroomColumnIfMissing();
@@ -358,8 +360,7 @@ public class DatabaseManager {
         }
     }
 
-
-
+    //Not used
     public void deleteTable(String tableName) throws SQLException {
         String sql = "DROP TABLE IF EXISTS \"" + tableName + "\"";
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
@@ -378,13 +379,13 @@ public class DatabaseManager {
                 boolean deleted = dbFile.delete();
 
                 if (deleted) {
-                    logger.info("Database '" + databasePath + "' deleted successfully.");
+                    logger.info("Database '{}' deleted successfully.", databasePath);
                 } else {
-                    logger.error("Failed to delete database '" + databasePath + "'.");
+                    logger.error("Failed to delete database '{}'.", databasePath);
                     throw new RuntimeException("Failed to delete database '" + databasePath + "'.");
                 }
             } else {
-                logger.warn("Database file '" + databasePath + "' does not exist.");
+                logger.warn("Database file '{}' does not exist.", databasePath);
                 throw new RuntimeException("Database file '" + databasePath + "' does not exist.");
             }
         } catch (Exception e) {
@@ -543,9 +544,6 @@ public class DatabaseManager {
         }
     }
 
-    /**
-     * Helper method to find the index of a column name in the columnNames array.
-     */
     private int getColumnIndex(String[] columnNames, String columnName) {
         for (int i = 0; i < columnNames.length; i++) {
             if (columnNames[i].equalsIgnoreCase(columnName)) {
@@ -554,7 +552,6 @@ public class DatabaseManager {
         }
         throw new IllegalArgumentException("Column " + columnName + " not found in columnNames array.");
     }
-
 
 
 
@@ -619,7 +616,7 @@ public class DatabaseManager {
             // Step 4: Find eligible classrooms based on capacity
             List<Classroom> eligibleClassrooms = classrooms.stream()
                     .filter(room -> room.getCapacity() >= studentCount)
-                    .collect(Collectors.toList());
+                    .toList();
 
             if (eligibleClassrooms.isEmpty()) {
                 System.err.println("No classrooms can accommodate course: " + course.courseCode);
@@ -744,7 +741,7 @@ public class DatabaseManager {
                         classroomName = null;
                     }
 
-                    Classroom assignedClassroom = (classroomName != null && !classroomName.trim().isEmpty())
+                    Classroom assignedClassroom = classroomName != null
                             ? getClassroomDetails(classroomName)
                             : null;
 
@@ -764,6 +761,7 @@ public class DatabaseManager {
 
 
     // Retrieve assigned classroom for a course
+    //No Used
     private String getAssignedClassroom(String courseCode) throws SQLException {
         String query = "SELECT Classroom FROM Courses WHERE Course = ?";
         try (Connection conn = getConnection();
@@ -813,6 +811,7 @@ public class DatabaseManager {
         return students;
     }
 
+    //No Used
     // Retrieve classroom capacity
     public Integer getClassroomCapacity(String classroomName) throws SQLException {
         String query = "SELECT Capacity FROM Classrooms WHERE Classroom = ?";
@@ -829,6 +828,7 @@ public class DatabaseManager {
         return 0;
     }
 
+    //No Used
     // Example method for selecting data (already provided)
     public static Object selectInit(String entity, String attribute, String condition) {
         String selectQuery = "SELECT " + attribute + "\nFROM " + entity + "\nWHERE " + condition + ";";
@@ -838,8 +838,7 @@ public class DatabaseManager {
              ResultSet resultSet = selectQueryStmt.executeQuery()) {
 
             if (resultSet.next()) {
-                Object result = resultSet.getObject(1);
-                return result;
+                return resultSet.getObject(1);
             }
 
         } catch (SQLException e) {
@@ -855,7 +854,6 @@ public class DatabaseManager {
              ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
-                String course = rs.getString("Course");
                 String timeToStart = rs.getString("TimeToStart");
                 int duration = rs.getInt("DurationInLectureHours");
                 String classroom = rs.getString("Classroom");
@@ -869,7 +867,6 @@ public class DatabaseManager {
             }
         }
     }
-
 
     private Schedule parseSchedule(String timeToStart, int durationInLectureHours) {
         try {
@@ -902,6 +899,7 @@ public class DatabaseManager {
             return null;
         }
     }
+
     public boolean removeStudentFromCourse(String courseCode,String studentName){
         try (Connection conn=getConnection()) {
             String query = "DELETE FROM Courses WHERE Course = ? AND Students = ?";
@@ -918,14 +916,12 @@ public class DatabaseManager {
 
     public boolean addStudentToCourse(String courseCode, String studentNames) {
         try (Connection conn = getConnection()) {
-            // Kursun mevcut bilgilerini alıyoruz
             String getCourseDetailsQuery = "SELECT TimeToStart, DurationInLectureHours, Classroom FROM Courses WHERE Course = ?";
 
             try (PreparedStatement stmt = conn.prepareStatement(getCourseDetailsQuery)) {
                 stmt.setString(1, courseCode);
                 ResultSet rs = stmt.executeQuery();
 
-                // Eğer kurs bulunamazsa, false döndürüyoruz
                 if (!rs.next()) {
                     return false;
                 }
@@ -934,36 +930,31 @@ public class DatabaseManager {
                 int durationInLectureHours = rs.getInt("DurationInLectureHours");
                 String classroom = rs.getString("Classroom");
 
-                // Öğrencileri virgülle ayırarak alıyoruz
                 String[] studentArray = studentNames.split(",");
 
-                // Öğrencileri ayrı ayrı ekliyoruz
                 String insertStudentQuery = "INSERT INTO Courses (Course, Students, TimeToStart, DurationInLectureHours, Classroom) VALUES (?, ?, ?, ?, ?)";
 
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertStudentQuery)) {
                     for (String studentName : studentArray) {
-                        studentName = studentName.trim(); // Öğrenci adlarını temizliyoruz, boşlukları kaldırıyoruz
+                        studentName = studentName.trim();
                         insertStmt.setString(1, courseCode);
                         insertStmt.setString(2, studentName);
                         insertStmt.setString(3, timeToStart);
                         insertStmt.setInt(4, durationInLectureHours);
                         insertStmt.setString(5, classroom);
 
-                        // Her öğrenci için sorguyu çalıştırıyoruz
                         insertStmt.addBatch();
                     }
 
-                    // Batch işlemi ile veritabanına toplu ekleme yapıyoruz
                     int[] results = insertStmt.executeBatch();
 
-                    // Eğer işlem başarılıysa, her öğrenci için pozitif bir değer döner
                     for (int result : results) {
                         if (result <= 0) {
-                            return false;  // Eğer bir öğrenci eklenemediyse, işlemi başarısız kabul ediyoruz
+                            return false;
                         }
                     }
 
-                    return true;  // Eğer tüm öğrenciler başarıyla eklenmişse
+                    return true;
                 }
             }
         } catch (SQLException e) {
@@ -971,7 +962,6 @@ public class DatabaseManager {
             return false;
         }
     }
-
 
     public static ObservableList<String> getStudentsNotInCourse(String courseCode) {
         ObservableList<String> studentNames = FXCollections.observableArrayList();
@@ -1041,7 +1031,7 @@ public class DatabaseManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0; // Eğer bir hata varsa veya sonuç boşsa, kalan kapasite 0 olarak döndürülür
+        return 0;
     }
 
 
@@ -1053,7 +1043,10 @@ public class DatabaseManager {
             List<Schedule> schedules = Schedules.getOrDefault(classroom.getName(), new ArrayList<>());
 
             Schedule newSchedule = parseSchedule(day + " " + startHour, duration);
-            boolean conflict = schedules.stream().anyMatch(schedule -> schedule.overlapsWith(newSchedule));
+            boolean conflict = schedules.stream().anyMatch(schedule -> {
+                assert newSchedule != null;
+                return schedule.overlapsWith(newSchedule);
+            });
 
             if (!conflict) {
                 return classroom;
@@ -1079,6 +1072,7 @@ public class DatabaseManager {
             }
         }
     }
+
     // Method to get common free times for selected students on a specific day
     public static ObservableList<String> getCommonFreeTimes(List<Student> selectedStudents, String day) throws SQLException {
         // Initialize a map to track free times for each student
@@ -1105,7 +1099,6 @@ public class DatabaseManager {
         // Sort the free times
         List<String> sortedFreeTimes = new ArrayList<>(commonFreeTimes);
         sortedFreeTimes.sort(Comparator.comparing(time -> LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"))));
-
         return FXCollections.observableArrayList(sortedFreeTimes);
     }
 
@@ -1130,7 +1123,7 @@ public class DatabaseManager {
                     String time = parts[1];
                     LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
                     for (int i = 0; i < duration; i++) {
-                        LocalTime slotTime = startTime.plusMinutes(i * 55); // Assuming 55-minute slots
+                        LocalTime slotTime = startTime.plusMinutes(i * 55L); // Assuming 55-minute slots
                         busyTimes.add(slotTime.format(DateTimeFormatter.ofPattern("H:mm")));
                     }
                 }
@@ -1173,7 +1166,7 @@ public class DatabaseManager {
                     String time = parts[1];
                     LocalTime startTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm"));
                     for (int i = 0; i < duration; i++) {
-                        LocalTime slotTime = startTime.plusMinutes(i * 55); // Assuming 55-minute slots
+                        LocalTime slotTime = startTime.plusMinutes(i * 55L); // Assuming 55-minute slots
                         courseTimes.add(slotTime.format(DateTimeFormatter.ofPattern("H:mm")));
                     }
                 }
@@ -1253,7 +1246,7 @@ public class DatabaseManager {
         int studentCount = course.getStudentCount();
         List<Classroom> suitableClassrooms = getAllClassroomsWithCapacity().stream()
                 .filter(classroom -> classroom.getCapacity() >= studentCount)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Classroom> availableClassrooms = new ArrayList<>();
 
@@ -1318,6 +1311,4 @@ public class DatabaseManager {
             return resultSet.next();
         }
     }
-
-
 }

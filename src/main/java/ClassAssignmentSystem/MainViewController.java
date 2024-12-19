@@ -8,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -24,10 +23,9 @@ public class MainViewController {
     private File classroomsCsvFile = null;
     private final DatabaseManager dbManager = new DatabaseManager("university.db");
     private static MainViewController instance;
-    private Stage studentListAddstage = new Stage();
+    private final Stage studentListAddstage = new Stage();
 
     // UI Components - Buttons
-
     @FXML
     private Button btnAddStudent;
 
@@ -61,6 +59,9 @@ public class MainViewController {
     @FXML
     private Button btnListStudents;
 
+    @FXML
+    private Button btnChangeClassroom;
+
     // UI Components - ListViews
     @FXML
     private ListView<String> coursesListView;
@@ -71,7 +72,8 @@ public class MainViewController {
     @FXML
     private ListView<String> studentsListView;
 
-    // UI Components - Labels for Course Details
+
+    // UI Components - Labels
     @FXML
     private Label lblCourseID;
 
@@ -88,12 +90,8 @@ public class MainViewController {
     private Label lblAssignedClassroom;
 
     @FXML
-    private Button btnChangeClassroom;
-
-
-    // UI Components - Label for Classroom Details
-    @FXML
     private Label lblClassroomCapacity;
+
 
     // Initialization method
     @FXML
@@ -125,7 +123,7 @@ public class MainViewController {
     }
 
     public MainViewController() {
-        instance = this; // Constructor çağrıldığında kendisini saklar
+        instance = this;
     }
 
     public static MainViewController getInstance() {
@@ -147,6 +145,7 @@ public class MainViewController {
         updateImportButtonState();
     }
 
+    // Handler for assignCourse
     @FXML
     private void handleAssignCourses() {
         try {
@@ -163,8 +162,7 @@ public class MainViewController {
         }
     }
 
-
-    // Handler for Assign Courses button
+    // Handler for Assign Courses button (not used.)
     @FXML
     private void handleAssignCoursesEnhanced() {
         try {
@@ -247,9 +245,6 @@ public class MainViewController {
         });
     }
 
-    /**
-     * Resets the UI components after successful database deletion.
-     */
     private void resetUIAfterDeletion() {
         // Disable Import and Delete buttons
         btnImport.setDisable(true);
@@ -273,8 +268,6 @@ public class MainViewController {
         lblAssignedClassroom.setText("Assigned Classroom: ");
         lblClassroomCapacity.setText("Capacity: ");
     }
-
-
 
     private void openCourseSchedule(String className) {
         try {
@@ -492,7 +485,7 @@ public class MainViewController {
                     .collect(Collectors.toList());
 
             // Show a Choice Dialog to let the user select a new classroom
-            ChoiceDialog<String> dialog = new ChoiceDialog<>(classroomNames.get(0), classroomNames);
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(classroomNames.getFirst(), classroomNames);
             dialog.setTitle("Change Classroom");
             dialog.setHeaderText("Change Classroom for Course: " + selectedCourseCode);
             dialog.setContentText("Select a new classroom:");
@@ -521,8 +514,6 @@ public class MainViewController {
         }
     }
 
-
-
     // Utility method to show alerts
     void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
@@ -532,7 +523,7 @@ public class MainViewController {
         alert.showAndWait();
     }
 
-//for Create course button
+    //for Create course button
     @FXML
     private void handleCreateCourse() {
         try {
