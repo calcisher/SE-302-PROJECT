@@ -33,6 +33,9 @@ public class MainViewController {
     public Button btnCreateCourse;
 
     @FXML
+    private Button btnHelp;
+
+    @FXML
     private Button btnDeleteStudent;
 
     @FXML
@@ -673,6 +676,25 @@ public class MainViewController {
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while adding the student.");
+        }
+    }
+
+    @FXML
+    private void handleHelp() {
+        try {
+            // Load the HelpManual UI from the FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ClassAssignmentSystem/HelpManual.fxml"));
+            Parent root = loader.load();
+
+            // Create a new stage for the Help Manual
+            Stage stage = new Stage();
+            stage.setTitle("Help Manual");
+            stage.setScene(new Scene(root, 800, 600)); // You can adjust the size as needed
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to open Help Manual.");
         }
     }
 
