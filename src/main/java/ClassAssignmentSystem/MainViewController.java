@@ -435,11 +435,12 @@ public class MainViewController {
     @FXML
     private void handleListStudents(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("studentListUI.fxml"));
             Parent root = loader.load();
 
             // Retrieve the controller and call ListAllStudentsFromDatabase
             StudentListController controller = loader.getController();
+            controller.setSelectionMode(true); // Enable selection mode
             controller.listAllStudentsFromDatabase();
 
             Stage stage = new Stage();
@@ -568,15 +569,17 @@ public class MainViewController {
             }
 
             // Load the StudentListUI.fxml
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentListUI.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("studentListUI.fxml"));
             Parent root = loader.load();
 
 
             // Retrieve the controller for the student list view
             StudentListController controller = loader.getController();
             controller.disableDoneButton(); //Disable Done Button in Student Addition Part
+            controller.setSelectionMode(true); // Enable selection mode
             MainViewController mainViewController = MainViewController.getInstance();
             controller.setMainViewController(mainViewController);
+
 
             // Fetch course capacity and current student count
             int courseCapacity = dbManager.getCourseCapacity(selectedCourse);
