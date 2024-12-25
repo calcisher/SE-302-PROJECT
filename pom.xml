@@ -11,7 +11,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <javafx.version>23.0.1</javafx.version>
+    <javafx.version>21.0.1</javafx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 <junit.version>5.9.2</junit.version>  </properties>
 
@@ -53,7 +53,7 @@
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
-      <version>23.0.1</version>
+      <version>21.0.1</version>
     </dependency>
 
 <dependency>
@@ -89,7 +89,7 @@
             <!-- Default configuration for running with: mvn clean javafx:run -->
             <id>default-cli</id>
             <configuration>
-              <mainClass>se302project/ClassAssignmentSystem.MainApp</mainClass>
+              <mainClass>se302project/ClassAssignmentSystem.RunMain</mainClass>
               <launcher>app</launcher>
               <jlinkZipName>app</jlinkZipName>
               <jlinkImageName>app</jlinkImageName>
